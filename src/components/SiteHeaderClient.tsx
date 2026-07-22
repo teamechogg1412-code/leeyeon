@@ -87,17 +87,17 @@ export function SiteHeaderClient({
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Link
             href="/search"
             className={
               isHome
-                ? "rounded-full p-2 text-white hover:bg-white/10"
+                ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                 : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
             }
             aria-label="Search"
           >
-            <Search size={18} />
+            <Search size={18} strokeWidth={2.25} color={isHome ? "#ffffff" : undefined} />
           </Link>
           {isLoggedIn ? (
             <>
@@ -105,25 +105,25 @@ export function SiteHeaderClient({
                 href="/schedule"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white hover:bg-white/10"
+                    ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                     : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Schedule"
               >
-                <CalendarDays size={18} />
+                <CalendarDays size={18} strokeWidth={2.25} color={isHome ? "#ffffff" : undefined} />
               </Link>
               <Link
                 href="/notifications"
                 className={
                   isHome
-                    ? "relative rounded-full p-2 text-white hover:bg-white/10"
+                    ? "relative rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                     : "relative rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Notifications"
               >
-                <Bell size={18} />
+                <Bell size={18} strokeWidth={2.25} color="#ffffff" />
                 {unreadCount > 0 && (
-                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#c81e1e] px-1 text-[9px] font-semibold text-white">
+                  <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#c81e1e] px-1 text-[9px] font-semibold text-white shadow-sm">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
@@ -133,24 +133,24 @@ export function SiteHeaderClient({
                   href="/shop"
                   className={
                     isHome
-                      ? "rounded-full p-2 text-white hover:bg-white/10"
+                      ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                       : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                   }
                   aria-label="Shop"
                 >
-                  <ShoppingBag size={18} />
+                  <ShoppingBag size={18} strokeWidth={2.25} color={isHome ? "#ffffff" : undefined} />
                 </Link>
               )}
               <Link
                 href="/me"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white hover:bg-white/10"
+                    ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                     : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Profile"
               >
-                <UserRound size={18} />
+                <UserRound size={18} strokeWidth={2.25} color={isHome ? "#ffffff" : undefined} />
               </Link>
               {isOwner && (
                 <Link
@@ -183,24 +183,24 @@ export function SiteHeaderClient({
                 href="/schedule"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white hover:bg-white/10"
+                    ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                     : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Schedule"
               >
-                <CalendarDays size={18} />
+                <CalendarDays size={18} strokeWidth={2.25} color={isHome ? "#ffffff" : undefined} />
               </Link>
               {shopEnabled && (
                 <Link
                   href="/shop"
                   className={
                     isHome
-                      ? "rounded-full p-2 text-white hover:bg-white/10"
+                      ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                       : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                   }
                   aria-label="Shop"
                 >
-                  <ShoppingBag size={18} />
+                  <ShoppingBag size={18} strokeWidth={2.25} color={isHome ? "#ffffff" : undefined} />
                 </Link>
               )}
               <Link
