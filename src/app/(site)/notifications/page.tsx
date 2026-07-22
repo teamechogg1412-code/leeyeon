@@ -15,7 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { markAllNotificationsReadAction } from "@/lib/actions";
 import { NotificationItem } from "@/components/NotificationItem";
 import { PushEnableButton } from "@/components/PushEnableButton";
-import { isPushConfigured } from "@/lib/webpush";
+import { isPushConfigured } from "@/lib/pushConfig";
 
 const TYPE_META: Record<
   string,
