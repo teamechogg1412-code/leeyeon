@@ -33,6 +33,12 @@ export default async function PopRoomPage({
   });
 
   const canChat = Boolean(session?.user?.id);
+  const currentUser = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, nickname: true, role: true },
+      })
+    : null;
 
   return (
     <div className="page-shell max-w-2xl space-y-4">
@@ -64,6 +70,7 @@ export default async function PopRoomPage({
           author: m.author,
         }))}
         canChat={canChat}
+        currentUser={currentUser}
         lockedReason={
           canChat ? undefined : "메시지를 보내려면 로그인하세요."
         }

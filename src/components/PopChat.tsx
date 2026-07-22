@@ -17,72 +17,155 @@ type PopMsg = {
   };
 };
 
+function mergeMessages(prev: PopMsg[], incoming: PopMsg[]) {
+  if (!incoming.length) return prev;
+  const ids = new Set(prev.map((m) => m.id));
+  const next = incoming.filter((m) => !ids.has(m.id));
+  return next.length ? [...prev, ...next] : prev;
+}
+
 export function PopChat({
   roomId,
   initialMessages,
   canChat,
   lockedReason,
+  currentUser,
 }: {
   roomId: string;
   initialMessages: PopMsg[];
   canChat: boolean;
   lockedReason?: string;
+  currentUser?: { id: string; nickname: string; role: string } | null;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [body, setBody] = useState("");
+  const [live, setLive] = useState(false);
   const [pending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
-  const latestId = messages.at(-1)?.id;
+  const latestIdRef = useRef(initialMessages.at(-1)?.id || "");
+
+  useEffect(() => {
+    latestIdRef.current = messages.at(-1)?.id || latestIdRef.current;
+  }, [messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
   useEffect(() => {
-    const timer = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `/api/pop/${roomId}/messages?after=${latestId || ""}`,
-          { cache: "no-store" }
-        );
-        if (!res.ok) return;
-        const data = (await res.json()) as { messages: PopMsg[] };
-        if (data.messages?.length) {
-          setMessages((prev) => {
-            const ids = new Set(prev.map((m) => m.id));
-            const next = data.messages.filter((m) => !ids.has(m.id));
-            return next.length ? [...prev, ...next] : prev;
-          });
+    let es: EventSource | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let stopped = false;
+
+    const applyIncoming = (incoming: PopMsg[]) => {
+      if (!incoming.length) return;
+      setMessages((prev) => mergeMessages(prev, incoming));
+      latestIdRef.current = incoming[incoming.length - 1]?.id || latestIdRef.current;
+    };
+
+    const startPolling = () => {
+      if (pollTimer || stopped) return;
+      setLive(false);
+      pollTimer = setInterval(async () => {
+        try {
+          const res = await fetch(
+            `/api/pop/${roomId}/messages?after=${latestIdRef.current || ""}`,
+            { cache: "no-store" }
+          );
+          if (!res.ok) return;
+          const data = (await res.json()) as { messages: PopMsg[] };
+          applyIncoming(data.messages || []);
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore polling errors
-      }
-    }, 2500);
-    return () => clearInterval(timer);
-  }, [roomId, latestId]);
+      }, 2000);
+    };
+
+    const startStream = () => {
+      const after = latestIdRef.current
+        ? `?after=${encodeURIComponent(latestIdRef.current)}`
+        : "";
+      es = new EventSource(`/api/pop/${roomId}/stream${after}`);
+
+      es.addEventListener("ready", () => setLive(true));
+      es.addEventListener("messages", (event) => {
+        try {
+          const data = JSON.parse((event as MessageEvent).data) as {
+            messages: PopMsg[];
+          };
+          applyIncoming(data.messages || []);
+        } catch {
+          // ignore bad payloads
+        }
+      });
+      es.onerror = () => {
+        es?.close();
+        es = null;
+        setLive(false);
+        startPolling();
+      };
+    };
+
+    startStream();
+
+    return () => {
+      stopped = true;
+      es?.close();
+      if (pollTimer) clearInterval(pollTimer);
+    };
+  }, [roomId]);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const text = body.trim();
-    if (!text || !canChat) return;
+    if (!text || !canChat || !currentUser) return;
     setBody("");
+
+    const optimistic: PopMsg = {
+      id: `temp-${Date.now()}`,
+      body: text,
+      createdAt: new Date().toISOString(),
+      author: currentUser,
+    };
+    setMessages((prev) => [...prev, optimistic]);
+
     startTransition(async () => {
       const form = new FormData();
       form.set("roomId", roomId);
       form.set("body", text);
       await sendPopMessageAction(form);
-      const res = await fetch(`/api/pop/${roomId}/messages?after=`, {
-        cache: "no-store",
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { messages: PopMsg[] };
-        if (data.messages) setMessages(data.messages);
+      try {
+        const res = await fetch(
+          `/api/pop/${roomId}/messages?after=${latestIdRef.current || ""}`,
+          { cache: "no-store" }
+        );
+        if (res.ok) {
+          const data = (await res.json()) as { messages: PopMsg[] };
+          setMessages((prev) => {
+            const withoutTemp = prev.filter((m) => !m.id.startsWith("temp-"));
+            return mergeMessages(withoutTemp, data.messages || []);
+          });
+        }
+      } catch {
+        // stream/polling will catch up
       }
     });
   }
 
   return (
     <div className="flex min-h-[70vh] flex-col overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="flex items-center justify-between border-b border-line px-4 py-2 text-[11px] text-muted">
+        <span>{live ? "실시간 연결됨" : "연결 재시도 중…"}</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              live ? "bg-emerald-500" : "bg-amber-500"
+            }`}
+          />
+          {live ? "LIVE SSE" : "Polling"}
+        </span>
+      </div>
+
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((msg) => {
           const isOfficial =
