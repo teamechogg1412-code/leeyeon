@@ -9,6 +9,7 @@ const nav = [
   { href: "/from", label: "From Yeon" },
   { href: "/contents", label: "Contents" },
   { href: "/community", label: "Community" },
+  { href: "/pop", label: "POP" },
   { href: "/schedule", label: "Schedule" },
   { href: "/shop", label: "Shop" },
 ];

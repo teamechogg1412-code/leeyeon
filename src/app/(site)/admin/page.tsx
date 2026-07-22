@@ -4,6 +4,7 @@ import {
   createBoardAction,
   createContentAction,
   createMembershipPlanAction,
+  createPopRoomAction,
   createProductAction,
   createScheduleAction,
   createStoryAction,
@@ -244,6 +245,39 @@ export default async function AdminPage() {
             className="rounded-full bg-black px-4 py-2 text-sm text-white"
           >
             등록
+          </button>
+        </form>
+
+        <form
+          action={createPopRoomAction}
+          className="space-y-3 rounded-2xl border border-line bg-surface p-5"
+        >
+          <h2 className="font-semibold">POP 방 만들기</h2>
+          <input
+            name="title"
+            required
+            placeholder="POP 제목"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
+          <textarea
+            name="description"
+            rows={3}
+            placeholder="설명"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="live" defaultChecked />
+            LIVE 표시
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="membershipRequired" />
+            멤버십 전용
+          </label>
+          <button
+            type="submit"
+            className="rounded-full bg-black px-4 py-2 text-sm text-white"
+          >
+            만들기
           </button>
         </form>
 

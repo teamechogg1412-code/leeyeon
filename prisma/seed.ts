@@ -130,6 +130,50 @@ async function ensureDemoMedia() {
         ],
       });
     }
+
+    const popCount = await prisma.popRoom.count({
+      where: { stageId: stage.id },
+    });
+    if (popCount === 0) {
+      const owner = await prisma.user.findFirst({
+        where: { role: "OWNER" },
+      });
+      const room = await prisma.popRoom.create({
+        data: {
+          stageId: stage.id,
+          title: "오늘도 수고했어요 🌙",
+          description: "짧게 인사하고 가는 LIVE POP",
+          live: true,
+          membershipRequired: false,
+        },
+      });
+      if (owner) {
+        await prisma.popMessage.createMany({
+          data: [
+            {
+              roomId: room.id,
+              authorId: owner.id,
+              body: "안녕하세요, 이연입니다. POP에 와줘서 고마워요!",
+            },
+            {
+              roomId: room.id,
+              authorId: owner.id,
+              body: "오늘 하루 잘 보내셨나요? 댓글로 안부인사 남겨주세요.",
+            },
+          ],
+        });
+      }
+
+      await prisma.popRoom.create({
+        data: {
+          stageId: stage.id,
+          title: "멤버십 전용 심야 POP",
+          description: "멤버만 입장 가능한 비하인드 토크",
+          live: false,
+          membershipRequired: true,
+        },
+      });
+    }
   }
 
   console.log("Demo media URLs ensured.");
@@ -394,6 +438,46 @@ async function main() {
         startsAt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 14),
       },
     ],
+  });
+
+  const pop = await prisma.popRoom.create({
+    data: {
+      stageId: stage.id,
+      title: "오늘도 수고했어요 🌙",
+      description: "짧게 인사하고 가는 LIVE POP",
+      live: true,
+      membershipRequired: false,
+    },
+  });
+
+  await prisma.popMessage.createMany({
+    data: [
+      {
+        roomId: pop.id,
+        authorId: owner.id,
+        body: "안녕하세요, 이연입니다. POP에 와줘서 고마워요!",
+      },
+      {
+        roomId: pop.id,
+        authorId: owner.id,
+        body: "오늘 하루 잘 보내셨나요? 댓글로 안부인사 남겨주세요.",
+      },
+      {
+        roomId: pop.id,
+        authorId: fan.id,
+        body: "이연님 오늘도 고생 많으셨어요!!",
+      },
+    ],
+  });
+
+  await prisma.popRoom.create({
+    data: {
+      stageId: stage.id,
+      title: "멤버십 전용 심야 POP",
+      description: "멤버만 입장 가능한 비하인드 토크",
+      live: false,
+      membershipRequired: true,
+    },
   });
 
   console.log("Seed complete");
