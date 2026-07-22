@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  nickname     String   @unique
+  role         String   @default("FAN") // FAN | OWNER | ADMIN
+  image        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  posts         Post[]
+  comments      Comment[]
+  stories       Story[]
+  memberships   Membership[]
+  orders        Order[]
+  notifications Notification[]
+}
+
+model Stage {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  tagline     String?
+  description String?
+  logoUrl     String?
+  heroUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  boards          Board[]
+  stories         Story[]
+  contents        Content[]
+  membershipPlans MembershipPlan[]
+  products        Product[]
+}
+
+model Board {
+  id                 String   @id @default(cuid())
+  stageId            String
+  name               String
+  slug               String
+  description        String?
+  icon               String   @default("list")
+  sortOrder          Int      @default(0)
+  membershipRequired Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  stage Stage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  posts Post[]
+
+  @@unique([stageId, slug])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  boardId   String
+  authorId  String
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  board    Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Story {
+  id        String   @id @default(cuid())
+  stageId   String
+  authorId  String
+  body      String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stage  Stage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Content {
+  id                 String   @id @default(cuid())
+  stageId            String
+  title              String
+  body               String
+  coverUrl           String?
+  membershipRequired Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  stage Stage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+}
+
+model MembershipPlan {
+  id           String   @id @default(cuid())
+  stageId      String
+  name         String
+  description  String?
+  price        Int
+  durationDays Int      @default(365)
+  benefits     String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stage       Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  planId    String
+  status    String   @default("ACTIVE") // ACTIVE | EXPIRED | CANCELLED
+  startsAt  DateTime @default(now())
+  endsAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan MembershipPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  stageId     String
+  name        String
+  description String?
+  price       Int
+  imageUrl    String?
+  stock       Int      @default(100)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stage      Stage       @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // MEMBERSHIP | PRODUCT
+  status    String   @default("PENDING") // PENDING | PAID | CANCELLED | REFUNDED
+  total     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String?
+  planId    String?
+  title     String
+  price     Int
+  quantity  Int     @default(1)
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  href      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
