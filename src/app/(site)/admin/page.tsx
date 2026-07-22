@@ -13,6 +13,7 @@ import {
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
 import { ImageUploadField } from "@/components/ImageUploadField";
+import { VideoUploadField } from "@/components/VideoUploadField";
 
 export default async function AdminPage() {
   const { isOwner } = await getCurrentUserAccess();
@@ -234,13 +235,14 @@ export default async function AdminPage() {
             placeholder="내용"
             className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
           />
+          <VideoUploadField label="영상 파일 (선택)" />
           <input
             name="videoUrl"
-            placeholder="영상 URL (YouTube / mp4)"
+            placeholder="또는 영상 URL (YouTube / mp4)"
             className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
           />
           <p className="-mt-1 text-[11px] text-muted">
-            YouTube 링크 또는 mp4 주소를 넣으면 콘텐츠 상세에서 재생됩니다.
+            파일을 올리면 Blob(또는 로컬)에 저장됩니다. URL만 넣어도 재생됩니다.
           </p>
           <input
             name="category"

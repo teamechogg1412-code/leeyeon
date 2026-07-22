@@ -23,5 +23,12 @@ export function getYoutubeEmbedUrl(url: string | null | undefined) {
 
 export function isDirectVideo(url: string | null | undefined) {
   if (!url) return false;
-  return /\.(mp4|webm|ogg)(\?|$)/i.test(url);
+  if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(url)) return true;
+  // Client-uploaded Blob videos keep a video extension; also accept
+  // /uploads/videos/ local fallback paths without a known query string.
+  if (/\/uploads\/videos\//i.test(url)) return true;
+  if (/blob\.vercel-storage\.com/i.test(url) && /\/videos\//i.test(url)) {
+    return true;
+  }
+  return false;
 }

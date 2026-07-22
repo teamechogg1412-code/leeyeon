@@ -15,6 +15,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 9** — POP 실시간 (SSE + 폴링 폴백)
 - **Phase 10** — 이미지 업로드 UX (미리보기/드래그앤드롭)
 - **Phase 11** — 스케줄 리마인더 (24h 알림 + hourly cron)
+- **Phase 12** — 영상 직접 업로드 (Blob client upload + 로컬 폴백)
 
 ## Toss Payments
 
@@ -74,7 +75,13 @@ Open http://localhost:3000
 - Set `CRON_SECRET` in Vercel env (optional but recommended)
 - Events starting within 24 hours notify fans once (`remindedAt`)
 
+### Video upload
+
+- Admin → 콘텐츠 등록에서 MP4/WEBM/MOV (최대 100MB)
+- `BLOB_READ_WRITE_TOKEN` 있으면 브라우저→Blob 직행 (`/api/blob/video-upload`)
+- 없으면 서버 액션 로컬 `public/uploads/videos` 폴백
+- YouTube / 외부 mp4 URL도 계속 지원
+
 ## Next phase ideas
 
-- 영상 직접 업로드 (Blob)
 - 브라우저 푸시 알림

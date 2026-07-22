@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { fulfillPaidOrder } from "@/lib/fulfill";
 import { createOrderCode, isTossEnabled } from "@/lib/order";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
-import { saveUploadedImage } from "@/lib/upload";
+import { saveUploadedImage, saveUploadedVideo } from "@/lib/upload";
 import { notifyFans, notifyUser } from "@/lib/notify";
 
 export async function loginAction(formData: FormData): Promise<void> {
@@ -372,7 +372,6 @@ export async function createContentAction(formData: FormData): Promise<void> {
   const title = String(formData.get("title") || "").trim();
   const body = String(formData.get("body") || "").trim();
   const category = String(formData.get("category") || "OFFICIAL").trim();
-  const videoUrl = String(formData.get("videoUrl") || "").trim() || null;
   const membershipRequired = formData.get("membershipRequired") === "on";
   if (!title || !body) redirect("/admin");
 
@@ -381,6 +380,16 @@ export async function createContentAction(formData: FormData): Promise<void> {
     image instanceof File ? image : null,
     "contents"
   );
+
+  const pastedVideoUrl = String(formData.get("videoUrl") || "").trim() || null;
+  const clientUploadedUrl =
+    String(formData.get("videoUploadedUrl") || "").trim() || null;
+  const videoFile = formData.get("video");
+  const serverUploadedUrl = await saveUploadedVideo(
+    videoFile instanceof File ? videoFile : null,
+    "videos"
+  );
+  const videoUrl = clientUploadedUrl || serverUploadedUrl || pastedVideoUrl;
 
   const stage = await getStage();
   const content = await prisma.content.create({
