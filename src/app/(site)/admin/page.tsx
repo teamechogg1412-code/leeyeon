@@ -177,6 +177,27 @@ export default async function AdminPage() {
               className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
             />
           </div>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              name="tierLabel"
+              placeholder="배지 라벨 (예: Official)"
+              className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+            />
+            <input
+              name="badgeColor"
+              type="color"
+              defaultValue="#1a1a1a"
+              className="h-10 w-full rounded-xl border border-line bg-white px-1 py-1"
+              title="배지 색"
+            />
+          </div>
+          <input
+            name="sortOrder"
+            type="number"
+            defaultValue={0}
+            placeholder="정렬 (낮을수록 먼저)"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
           <textarea
             name="benefits"
             rows={4}

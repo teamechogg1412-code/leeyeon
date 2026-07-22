@@ -20,7 +20,9 @@ import {
   toggleReactionAction,
 } from "@/lib/actions";
 import { auth } from "@/lib/auth";
-import { avatarColor, avatarInitial } from "@/lib/avatar";
+import { getMembershipBadgeMap } from "@/lib/membership";
+import { UserAvatar } from "@/components/UserAvatar";
+import { UserBadges } from "@/components/UserBadges";
 import { prisma } from "@/lib/prisma";
 
 const REACTIONS = [
@@ -61,8 +63,12 @@ export default async function PostDetailPage({
     session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
   const canDeletePost =
     session?.user?.id === post.authorId || Boolean(isOwnerRole);
-  const isManager =
-    post.author.role === "OWNER" || post.author.role === "ADMIN";
+
+  const badgeMap = await getMembershipBadgeMap(
+    [post.authorId, ...post.comments.map((c) => c.authorId)],
+    post.board.stageId
+  );
+  const authorBadge = badgeMap.get(post.authorId);
 
   const reactionCounts = Object.fromEntries(
     REACTIONS.map((r) => [
@@ -89,22 +95,21 @@ export default async function PostDetailPage({
       <article className="mt-5 rounded-2xl border border-line bg-surface px-5 py-6 sm:px-8 sm:py-8">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div
-              className="flex h-11 w-11 items-center justify-center rounded-full text-sm font-semibold text-white"
-              style={{ background: avatarColor(post.author.nickname) }}
-            >
-              {avatarInitial(post.author.nickname)}
-            </div>
+            <UserAvatar
+              nickname={post.author.nickname}
+              image={post.author.image}
+              size={44}
+            />
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[15px] font-semibold">
                   {post.author.nickname}
                 </span>
-                {isManager && (
-                  <span className="rounded-full bg-black/[0.06] px-2 py-0.5 text-[11px] font-medium text-black/70">
-                    Manager
-                  </span>
-                )}
+                <UserBadges
+                  role={post.author.role}
+                  tierLabel={authorBadge?.tierLabel}
+                  badgeColor={authorBadge?.badgeColor}
+                />
               </div>
               <p className="mt-0.5 text-[13px] text-muted">
                 {format(post.createdAt, "yyyy.MM.dd HH:mm")} · 조회{" "}
@@ -215,14 +220,11 @@ export default async function PostDetailPage({
           >
             <input type="hidden" name="postId" value={post.id} />
             <div className="flex gap-3">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                style={{
-                  background: avatarColor(session.user.nickname || "me"),
-                }}
-              >
-                {avatarInitial(session.user.nickname || "me")}
-              </div>
+              <UserAvatar
+                nickname={session.user.nickname || "me"}
+                image={session.user.image}
+                size={36}
+              />
               <textarea
                 name="body"
                 rows={3}
@@ -254,19 +256,24 @@ export default async function PostDetailPage({
           {post.comments.map((comment) => {
             const canDeleteComment =
               session?.user?.id === comment.authorId || Boolean(isOwnerRole);
+            const commentBadge = badgeMap.get(comment.authorId);
             return (
               <div key={comment.id} className="flex gap-3 py-5">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                  style={{ background: avatarColor(comment.author.nickname) }}
-                >
-                  {avatarInitial(comment.author.nickname)}
-                </div>
+                <UserAvatar
+                  nickname={comment.author.nickname}
+                  image={comment.author.image}
+                  size={36}
+                />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-semibold">
                       {comment.author.nickname}
                     </span>
+                    <UserBadges
+                      role={comment.author.role}
+                      tierLabel={commentBadge?.tierLabel}
+                      badgeColor={commentBadge?.badgeColor}
+                    />
                     <span className="text-xs text-muted">
                       {formatDistanceToNow(comment.createdAt, {
                         addSuffix: true,

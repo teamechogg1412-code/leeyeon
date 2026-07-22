@@ -197,6 +197,41 @@ async function ensureDemoMedia() {
       });
     }
 
+    const plans = await prisma.membershipPlan.findMany({
+      where: { stageId: stage.id },
+    });
+    for (const plan of plans) {
+      if (!plan.tierLabel) {
+        const isPremium = /premium/i.test(plan.name);
+        await prisma.membershipPlan.update({
+          where: { id: plan.id },
+          data: {
+            tierLabel: isPremium ? "Premium" : "Official",
+            badgeColor: isPremium ? "#8b6914" : "#1a1a1a",
+            sortOrder: isPremium ? 1 : 0,
+          },
+        });
+      }
+    }
+
+    const hasPremium = plans.some((p) => /premium/i.test(p.name));
+    if (!hasPremium && plans.length > 0) {
+      await prisma.membershipPlan.create({
+        data: {
+          stageId: stage.id,
+          name: "Premium Membership",
+          description: "Official 혜택 + 시즌 굿즈 할인 · POP 우선석",
+          price: 69000,
+          durationDays: 365,
+          tierLabel: "Premium",
+          badgeColor: "#8b6914",
+          sortOrder: 1,
+          benefits:
+            "Official 전체 혜택|시즌 굿즈 10% 할인|POP 우선 안내|시즌 포토 프레임",
+        },
+      });
+    }
+
     const fans = await prisma.user.findMany({
       where: { role: "FAN" },
       select: { id: true },
@@ -426,8 +461,26 @@ async function main() {
       description: "디지털 회원카드 · 전용 콘텐츠 · 전용 커뮤니티",
       price: 39000,
       durationDays: 365,
+      tierLabel: "Official",
+      badgeColor: "#1a1a1a",
+      sortOrder: 0,
       benefits:
         "디지털 회원카드|멤버십 전용 콘텐츠|OFF-SHOT 게시판|이벤트 우선 안내",
+    },
+  });
+
+  await prisma.membershipPlan.create({
+    data: {
+      stageId: stage.id,
+      name: "Premium Membership",
+      description: "Official 혜택 + 시즌 굿즈 할인 · POP 우선석",
+      price: 69000,
+      durationDays: 365,
+      tierLabel: "Premium",
+      badgeColor: "#8b6914",
+      sortOrder: 1,
+      benefits:
+        "Official 전체 혜택|시즌 굿즈 10% 할인|POP 우선 안내|시즌 포토 프레임",
     },
   });
 

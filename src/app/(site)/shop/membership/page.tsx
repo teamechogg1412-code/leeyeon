@@ -5,24 +5,20 @@ import {
   getCurrentUserAccess,
   getStage,
 } from "@/lib/stage";
+import { getActiveMembership } from "@/lib/membership";
 import { prisma } from "@/lib/prisma";
+import { MemberCard } from "@/components/MemberCard";
 
 export default async function MembershipPage() {
   const stage = await getStage();
   const { isMember, session } = await getCurrentUserAccess();
   const plans = await prisma.membershipPlan.findMany({
     where: { stageId: stage.id, active: true },
+    orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
   });
 
   const membership = session?.user?.id
-    ? await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          status: "ACTIVE",
-          endsAt: { gt: new Date() },
-        },
-        include: { plan: true },
-      })
+    ? await getActiveMembership(session.user.id, stage.id)
     : null;
 
   return (
@@ -38,31 +34,15 @@ export default async function MembershipPage() {
       </p>
 
       {isMember && membership && (
-        <div className="relative mt-8 overflow-hidden rounded-3xl bg-[#111] p-7 text-white shadow-lg">
-          <div
-            className="pointer-events-none absolute inset-0 opacity-40"
-            style={{
-              background:
-                "radial-gradient(circle at 80% 20%, #444, transparent 40%)",
-            }}
+        <div className="mt-8">
+          <MemberCard
+            stageName={stage.name}
+            nickname={session?.user?.nickname || ""}
+            planName={membership.plan.name}
+            tierLabel={membership.plan.tierLabel}
+            badgeColor={membership.plan.badgeColor}
+            endsAt={membership.endsAt}
           />
-          <div className="relative">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-white/50">
-              Digital Member Card
-            </p>
-            <p className="mt-5 font-[family-name:var(--font-display)] text-4xl">
-              {stage.name}
-            </p>
-            <p className="mt-3 text-sm text-white/70">
-              {session?.user?.nickname}
-            </p>
-            <div className="mt-8 flex items-end justify-between gap-4">
-              <p className="text-sm text-white/80">{membership.plan.name}</p>
-              <p className="text-xs text-white/45">
-                ~ {membership.endsAt.toLocaleDateString("ko-KR")}
-              </p>
-            </div>
-          </div>
         </div>
       )}
 
@@ -72,7 +52,17 @@ export default async function MembershipPage() {
             key={plan.id}
             className="rounded-2xl border border-line bg-surface p-6"
           >
-            <h2 className="text-xl font-semibold">{plan.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold">{plan.name}</h2>
+              {plan.tierLabel && (
+                <span
+                  className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
+                  style={{ background: plan.badgeColor || "#1a1a1a" }}
+                >
+                  {plan.tierLabel}
+                </span>
+              )}
+            </div>
             <p className="mt-2 text-sm text-muted">{plan.description}</p>
             <p className="mt-4 text-2xl font-semibold">
               {formatPrice(plan.price)}

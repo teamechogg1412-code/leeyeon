@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { Radio } from "lucide-react";
 import { PopChat } from "@/components/PopChat";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
+import { getActiveMembership } from "@/lib/membership";
+import { fetchPopMessages } from "@/lib/popMessages";
 import { prisma } from "@/lib/prisma";
 
 export default async function PopRoomPage({
@@ -23,22 +25,37 @@ export default async function PopRoomPage({
     redirect("/shop/membership");
   }
 
-  const messages = await prisma.popMessage.findMany({
-    where: { roomId: room.id },
-    orderBy: { createdAt: "asc" },
+  const messages = await fetchPopMessages({
+    roomId: room.id,
+    stageId: stage.id,
     take: 100,
-    include: {
-      author: { select: { id: true, nickname: true, role: true } },
-    },
   });
 
   const canChat = Boolean(session?.user?.id);
-  const currentUser = session?.user?.id
-    ? await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { id: true, nickname: true, role: true },
-      })
-    : null;
+  let currentUser: {
+    id: string;
+    nickname: string;
+    role: string;
+    image: string | null;
+    tierLabel: string | null;
+    badgeColor: string | null;
+  } | null = null;
+
+  if (session?.user?.id) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, nickname: true, role: true, image: true },
+    });
+    const membership = await getActiveMembership(session.user.id, stage.id);
+    if (user) {
+      currentUser = {
+        ...user,
+        tierLabel:
+          membership?.plan.tierLabel || membership?.plan.name || null,
+        badgeColor: membership?.plan.badgeColor || null,
+      };
+    }
+  }
 
   return (
     <div className="page-shell max-w-2xl space-y-4">
@@ -63,12 +80,7 @@ export default async function PopRoomPage({
 
       <PopChat
         roomId={room.id}
-        initialMessages={messages.map((m) => ({
-          id: m.id,
-          body: m.body,
-          createdAt: m.createdAt.toISOString(),
-          author: m.author,
-        }))}
+        initialMessages={messages}
         canChat={canChat}
         currentUser={currentUser}
         lockedReason={

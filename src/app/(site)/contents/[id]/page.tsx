@@ -19,9 +19,11 @@ import {
   toggleContentReactionAction,
 } from "@/lib/actions";
 import { auth } from "@/lib/auth";
-import { avatarColor, avatarInitial } from "@/lib/avatar";
 import { getYoutubeEmbedUrl, isDirectVideo } from "@/lib/media";
+import { getMembershipBadgeMap } from "@/lib/membership";
 import { getCurrentUserAccess } from "@/lib/stage";
+import { UserAvatar } from "@/components/UserAvatar";
+import { UserBadges } from "@/components/UserBadges";
 import { prisma } from "@/lib/prisma";
 
 const REACTIONS = [
@@ -40,7 +42,8 @@ export default async function ContentDetailPage({
 }) {
   const { id } = await params;
   const session = await auth();
-  const { isMember } = await getCurrentUserAccess();
+  const { isMember, isOwner: isOwnerRole, stage } =
+    await getCurrentUserAccess();
 
   const content = await prisma.content.findUnique({
     where: { id },
@@ -53,6 +56,11 @@ export default async function ContentDetailPage({
     },
   });
   if (!content) notFound();
+
+  const badgeMap = await getMembershipBadgeMap(
+    content.comments.map((c) => c.authorId),
+    content.stageId || stage.id
+  );
 
   if (content.membershipRequired && !isMember) {
     return (
@@ -89,8 +97,6 @@ export default async function ContentDetailPage({
       .filter((r) => r.userId === session?.user?.id)
       .map((r) => r.type)
   );
-  const isOwnerRole =
-    session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
 
   return (
     <div className="page-shell !max-w-[1200px]">
@@ -212,24 +218,27 @@ export default async function ContentDetailPage({
             {content.comments.map((comment) => {
               const canDelete =
                 session?.user?.id === comment.authorId || Boolean(isOwnerRole);
+              const badge = badgeMap.get(comment.authorId);
               return (
                 <div
                   key={comment.id}
                   className="flex gap-2.5 border-b border-black/5 py-3.5"
                 >
-                  <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
-                    style={{
-                      background: avatarColor(comment.author.nickname),
-                    }}
-                  >
-                    {avatarInitial(comment.author.nickname)}
-                  </div>
+                  <UserAvatar
+                    nickname={comment.author.nickname}
+                    image={comment.author.image}
+                    size={32}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <span className="text-[13px] font-semibold">
                         {comment.author.nickname}
                       </span>
+                      <UserBadges
+                        role={comment.author.role}
+                        tierLabel={badge?.tierLabel}
+                        badgeColor={badge?.badgeColor}
+                      />
                       <span className="text-[11px] text-muted">
                         {formatDistanceToNow(comment.createdAt, {
                           addSuffix: true,

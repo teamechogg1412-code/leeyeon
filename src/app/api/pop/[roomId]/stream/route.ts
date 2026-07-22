@@ -1,22 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { fetchPopMessages } from "@/lib/popMessages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-function serializeMessage(m: {
-  id: string;
-  body: string;
-  createdAt: Date;
-  author: { id: string; nickname: string; role: string };
-}) {
-  return {
-    id: m.id,
-    body: m.body,
-    createdAt: m.createdAt.toISOString(),
-    author: m.author,
-  };
-}
 
 export async function GET(
   req: Request,
@@ -48,30 +35,24 @@ export async function GET(
       const tick = async () => {
         if (closed) return;
         try {
-          let afterAt: Date | null = null;
+          let afterCreatedAt: Date | undefined;
           if (afterId) {
             const anchor = await prisma.popMessage.findUnique({
               where: { id: afterId },
               select: { createdAt: true },
             });
-            afterAt = anchor?.createdAt || null;
+            afterCreatedAt = anchor?.createdAt;
           }
 
-          const messages = await prisma.popMessage.findMany({
-            where: {
-              roomId,
-              ...(afterAt ? { createdAt: { gt: afterAt } } : {}),
-            },
-            orderBy: { createdAt: "asc" },
+          const messages = await fetchPopMessages({
+            roomId,
+            stageId: room.stageId,
+            afterCreatedAt,
             take: 50,
-            include: {
-              author: { select: { id: true, nickname: true, role: true } },
-            },
           });
 
           if (messages.length) {
-            const payload = messages.map(serializeMessage);
-            send("messages", { messages: payload });
+            send("messages", { messages });
             afterId = messages[messages.length - 1].id;
           } else {
             send("ping", { t: Date.now() });

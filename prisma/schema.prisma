@@ -15,6 +15,7 @@ model User {
   nickname     String   @unique
   role         String   @default("FAN") // FAN | OWNER | ADMIN
   image        String?
+  bio          String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -179,6 +180,9 @@ model MembershipPlan {
   price        Int
   durationDays Int      @default(365)
   benefits     String
+  tierLabel    String?
+  badgeColor   String?  @default("#1a1a1a")
+  sortOrder    Int      @default(0)
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

@@ -56,6 +56,56 @@ export async function logoutAction() {
   await signOut({ redirectTo: "/" });
 }
 
+export async function updateProfileAction(
+  _prev: { ok?: boolean; error?: string },
+  formData: FormData
+): Promise<{ ok?: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "로그인이 필요합니다." };
+  }
+
+  const name = String(formData.get("name") || "").trim();
+  const nickname = String(formData.get("nickname") || "").trim();
+  const bio = String(formData.get("bio") || "").trim().slice(0, 160);
+
+  if (!name || !nickname) {
+    return { error: "이름과 닉네임을 입력해 주세요." };
+  }
+
+  const taken = await prisma.user.findFirst({
+    where: {
+      nickname,
+      id: { not: session.user.id },
+    },
+  });
+  if (taken) {
+    return { error: "이미 사용 중인 닉네임입니다." };
+  }
+
+  const image = formData.get("image");
+  const uploaded = await saveUploadedImage(
+    image instanceof File ? image : null,
+    "avatars"
+  );
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      name,
+      nickname,
+      bio: bio || null,
+      ...(uploaded ? { image: uploaded } : {}),
+    },
+  });
+
+  revalidatePath("/me");
+  revalidatePath("/");
+  revalidatePath("/community");
+  revalidatePath("/pop");
+  return { ok: true };
+}
+
 export async function createPostAction(formData: FormData): Promise<void> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -585,6 +635,9 @@ export async function createMembershipPlanAction(
   const description = String(formData.get("description") || "").trim();
   const price = Number(formData.get("price") || 0);
   const durationDays = Number(formData.get("durationDays") || 365);
+  const tierLabel = String(formData.get("tierLabel") || "").trim() || null;
+  const badgeColor = String(formData.get("badgeColor") || "").trim() || "#1a1a1a";
+  const sortOrder = Number(formData.get("sortOrder") || 0);
   const benefits = String(formData.get("benefits") || "")
     .split("\n")
     .map((b) => b.trim())
@@ -602,6 +655,9 @@ export async function createMembershipPlanAction(
       price,
       durationDays,
       benefits,
+      tierLabel,
+      badgeColor,
+      sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
     },
   });
 

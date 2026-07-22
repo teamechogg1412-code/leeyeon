@@ -17,6 +17,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 11** — 스케줄 리마인더 (24h 알림 + hourly cron)
 - **Phase 12** — 영상 직접 업로드 (Blob client upload + 로컬 폴백)
 - **Phase 13** — 브라우저 푸시 알림 (Web Push + VAPID)
+- **Phase 14** — 멤버십 티어 배지 / 프로필 커스텀
 
 ## Toss Payments
 

@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { sendPopMessageAction } from "@/lib/actions";
-import { avatarColor, avatarInitial } from "@/lib/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
+import { UserBadges } from "@/components/UserBadges";
 
 type PopMsg = {
   id: string;
@@ -14,6 +15,9 @@ type PopMsg = {
     id: string;
     nickname: string;
     role: string;
+    image?: string | null;
+    tierLabel?: string | null;
+    badgeColor?: string | null;
   };
 };
 
@@ -35,7 +39,14 @@ export function PopChat({
   initialMessages: PopMsg[];
   canChat: boolean;
   lockedReason?: string;
-  currentUser?: { id: string; nickname: string; role: string } | null;
+  currentUser?: {
+    id: string;
+    nickname: string;
+    role: string;
+    image?: string | null;
+    tierLabel?: string | null;
+    badgeColor?: string | null;
+  } | null;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [body, setBody] = useState("");
@@ -168,26 +179,23 @@ export function PopChat({
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((msg) => {
-          const isOfficial =
-            msg.author.role === "OWNER" || msg.author.role === "ADMIN";
           return (
             <div key={msg.id} className="flex gap-2.5">
-              <div
-                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
-                style={{ background: avatarColor(msg.author.nickname) }}
-              >
-                {avatarInitial(msg.author.nickname)}
-              </div>
+              <UserAvatar
+                nickname={msg.author.nickname}
+                image={msg.author.image}
+                size={32}
+              />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[13px] font-medium">
                     {msg.author.nickname}
                   </span>
-                  {isOfficial && (
-                    <span className="rounded-full bg-black px-1.5 py-0.5 text-[9px] font-medium text-white">
-                      Manager
-                    </span>
-                  )}
+                  <UserBadges
+                    role={msg.author.role}
+                    tierLabel={msg.author.tierLabel}
+                    badgeColor={msg.author.badgeColor}
+                  />
                   <time className="text-[11px] text-muted">
                     {format(new Date(msg.createdAt), "M/d HH:mm", {
                       locale: ko,
