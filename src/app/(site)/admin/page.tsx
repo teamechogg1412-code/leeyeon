@@ -256,15 +256,40 @@ export default async function AdminPage() {
             placeholder="내용"
             className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
           />
-          <VideoUploadField label="영상 파일 (선택)" />
-          <input
-            name="videoUrl"
-            placeholder="또는 영상 URL (YouTube / mp4)"
-            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
-          />
-          <p className="-mt-1 text-[11px] text-muted">
-            파일을 올리면 Blob(또는 로컬)에 저장됩니다. URL만 넣어도 재생됩니다.
-          </p>
+          <div className="space-y-3 rounded-xl border border-line bg-[#fafafa] p-4">
+            <div>
+              <p className="text-sm font-medium">영상 (하이브리드)</p>
+              <p className="mt-1 text-[11px] text-muted">
+                긴 영상·공개 가능 콘텐츠는 YouTube 권장. 짧은 전용 클립만 직접
+                업로드하세요.
+              </p>
+            </div>
+            <label className="block text-sm">
+              <span className="mb-1.5 flex items-center gap-2">
+                YouTube 링크
+                <span className="rounded-full bg-black px-2 py-0.5 text-[10px] font-medium text-white">
+                  권장
+                </span>
+              </span>
+              <input
+                name="videoUrl"
+                placeholder="https://www.youtube.com/watch?v=... 또는 youtu.be/..."
+                className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none"
+              />
+            </label>
+            <div className="relative py-1 text-center text-[11px] text-muted">
+              <span className="absolute inset-x-0 top-1/2 border-t border-line" />
+              <span className="relative bg-[#fafafa] px-2">또는</span>
+            </div>
+            <VideoUploadField
+              label="직접 업로드 (선택)"
+              hint="멤버십 전용 짧은 클립 · MP4/WEBM/MOV · 100MB 이하"
+            />
+            <p className="text-[11px] text-muted">
+              둘 다 넣으면 YouTube 링크를 우선 사용합니다. 재생은 Contents
+              상세에서 자동으로 임베드/플레이어를 고릅니다.
+            </p>
+          </div>
           <input
             name="category"
             defaultValue="OFFICIAL"

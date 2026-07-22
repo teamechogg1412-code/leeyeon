@@ -23,20 +23,86 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 17** — 비밀번호 찾기 / 이메일 인증
 - **Phase 18** — 주문·배송 관리 UI
 - **Phase 19** — PWA (manifest, offline shell, install banner)
+- **Phase 20** — Toss 실결제 전환 (계획) — 테스트키 → 라이브키, 데모 폴백 정리, 운영 보완
+- **영상 하이브리드** — YouTube 링크(권장) + 직접 업로드(짧은 전용 클립) 병행
 
-## Toss Payments
+## 영상 하이브리드
 
-`.env`에 테스트 키를 넣으면 결제 위젯이 활성화됩니다.
+공식 Contents 영상은 두 방식을 같이 씁니다.
 
+| 방식 | 언제 | 비용 |
+|------|------|------|
+| **YouTube 링크 (권장)** | 긴 영상, 공개·일부공개 | 서버 전송비 거의 없음 |
+| **직접 업로드** | 짧은 멤버십 전용 클립 등 | Blob 저장·재생량에 비례 |
+
+- 관리자 콘텐츠 등록에서 YouTube / 업로드를 함께 제공
+- 둘 다 넣으면 **YouTube를 우선** 사용
+- 재생 페이지는 YouTube면 iframe, 파일이면 `<video>` 자동 선택
+- 팬 커뮤니티 영상 업로드는 여전히 없음 (이미지·글만)
+
+## Phase 20 — Toss 실결제 구현 계획
+
+이미 **위젯 체크아웃 + confirm API** 코드는 있음. 키가 없으면 데모 결제(즉시 완료)로 동작 중.
+토스는 PG라서 팬이 토스 앱을 쓸 필요는 없고, 카드 등 수단으로 결제 가능.
+(다른 PG·Stripe는 필요 시 별도 Phase로 검토)
+
+### 목표
+데모 결제를 끄고, 멤버십·MD를 **토스페이먼츠로 실제 결제**하게 만든다.
+
+### 현재 상태
+| 항목 | 상태 |
+|------|------|
+| 주문 생성 → `/checkout` → 토스 위젯 | ✅ |
+| `/payment/success` → confirm → `fulfillPaidOrder` | ✅ |
+| `/payment/fail` | ✅ |
+| env 없으면 데모 즉시 결제 | ✅ (실서비스 전 차단 필요) |
+| 웹훅 / 환불 / PENDING 만료 | ❌ |
+| UI “데모 결제” 문구 | ❌ 정리 필요 |
+
+### 구현 단계
+
+1. **테스트 키 연동**
+   - 토스 개발자센터에서 `test_ck_` / `test_sk_` 발급
+   - Vercel env: `NEXT_PUBLIC_TOSS_CLIENT_KEY`, `TOSS_SECRET_KEY`
+   - Redeploy 후 멤버십·MD 구매로 위젯·테스트카드 확인
+
+2. **데모 폴백 정리**
+   - 프로덕션에서 키 없으면 구매 버튼 비활성 / 에러
+   - 버튼 문구: “데모 결제” → “결제하기”
+   - (선택) `PAYMENT_MODE=demo|toss` 로 로컬만 데모 허용
+
+3. **결제 수단**
+   - 토스 상점 설정에서 카드·간편결제(카카오/네이버 등) 활성화
+   - 위젯 `variantKey`는 기본 `DEFAULT` 유지, 필요 시 커스텀
+
+4. **운영 보완 (실서비스 전 권장)**
+   - 결제 웹훅: 성공 리다이렉트 유실 시에도 주문 확정
+   - 미결제(`PENDING`) 주문 만료·취소
+   - 관리자 환불/취소 → 토스 취소 API
+   - 배송지: 가능하면 결제 전 입력
+   - confirm 시 금액·`orderCode` 재검증 유지, secret 없을 때 fulfill 금지
+
+5. **라이브 전환**
+   - 사업자 심사·계약 완료 후 `live_ck_` / `live_sk_` 교체
+   - 성공/실패 URL 도메인(`leeyeon.vercel.app`) 등록
+   - 소액 실결제 1건 검증 후 오픈
+
+### env
 ```env
-NEXT_PUBLIC_TOSS_CLIENT_KEY=test_ck_...
-TOSS_SECRET_KEY=test_sk_...
+NEXT_PUBLIC_TOSS_CLIENT_KEY=test_ck_...   # 라이브: live_ck_...
+TOSS_SECRET_KEY=test_sk_...               # 라이브: live_sk_...
 ```
 
-키가 없으면 기존처럼 **데모 결제**로 바로 주문이 완료됩니다.
+### 관련 경로
+- `src/components/TossCheckout.tsx`
+- `src/app/(site)/checkout/[orderId]/page.tsx`
+- `src/app/(site)/payment/success|fail`
+- `src/lib/actions.ts` (`purchase*`, `confirmTossPaymentAction`)
+- `src/lib/fulfill.ts`, `src/lib/order.ts`
 
-> GitHub Pages(`*.github.io`)는 정적 미리보기만 제공합니다.  
-> 실제 앱은 로컬 또는 **Vercel + Neon Postgres**에서 실행하세요.
+## Toss Payments (요약)
+
+키가 있으면 위젯 결제, 없으면 **데모 결제**. 실사용은 **Phase 20** 참고.
 
 ## Quick start
 
@@ -71,6 +137,7 @@ Open http://localhost:3000
 3. **Storage**에서 **Blob** 추가 (Public) — `BLOB_READ_WRITE_TOKEN` 자동 주입
 4. Environment Variables 추가:
    - `AUTH_SECRET` (랜덤 긴 문자열)
+   - (선택) Toss 결제: `NEXT_PUBLIC_TOSS_CLIENT_KEY`, `TOSS_SECRET_KEY` (없으면 데모 결제 — Phase 20)
    - (선택) Web Push: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
    - (선택) `CRON_SECRET`
 5. Deploy — build에서 `prisma db push` + seed + `next build` 실행

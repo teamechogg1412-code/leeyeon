@@ -10,6 +10,7 @@ import { fulfillPaidOrder } from "@/lib/fulfill";
 import { createOrderCode, isTossEnabled } from "@/lib/order";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { saveUploadedImage, saveUploadedVideo } from "@/lib/upload";
+import { getYoutubeEmbedUrl } from "@/lib/media";
 import { notifyFans, notifyUser } from "@/lib/notify";
 import {
   appBaseUrl,
@@ -578,7 +579,12 @@ export async function createContentAction(formData: FormData): Promise<void> {
     videoFile instanceof File ? videoFile : null,
     "videos"
   );
-  const videoUrl = clientUploadedUrl || serverUploadedUrl || pastedVideoUrl;
+  const uploadedUrl = clientUploadedUrl || serverUploadedUrl || null;
+  // Hybrid: prefer YouTube when a valid link is provided (cheaper + better UX).
+  // Otherwise fall back to direct upload / raw mp4 URL.
+  const videoUrl = getYoutubeEmbedUrl(pastedVideoUrl)
+    ? pastedVideoUrl
+    : uploadedUrl || pastedVideoUrl;
 
   const stage = await getStage();
   const content = await prisma.content.create({
