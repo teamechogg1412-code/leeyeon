@@ -54,16 +54,13 @@ export default async function HomePage() {
     <div className="pb-8">
       {/* Full-bleed magazine hero — nainwoo-style */}
       <section className="hero-bleed relative isolate min-h-[min(100svh,920px)] overflow-hidden bg-[#1a1c1e] text-white">
-        <div
-          className="absolute inset-0 scale-[1.02]"
-          style={{
-            backgroundImage: `linear-gradient(to top, rgba(10,10,12,.55), rgba(10,10,12,.12) 42%, rgba(10,10,12,.28)), url(${heroSrc})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center 18%",
-          }}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={heroSrc}
+          alt=""
+          className="absolute inset-0 h-full w-full scale-[1.02] object-cover object-[center_18%]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/35" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,.35)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
 
         {/* Oversized brand watermark */}
         <div className="pointer-events-none absolute inset-x-0 top-[9%] z-[1] px-3 text-center sm:top-[7%]">
