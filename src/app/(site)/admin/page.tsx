@@ -7,6 +7,7 @@ import {
   createPopRoomAction,
   createProductAction,
   createScheduleAction,
+  createStageAction,
   createStoryAction,
   updateStageAction,
 } from "@/lib/actions";
@@ -59,6 +60,45 @@ export default async function AdminPage() {
           </div>
         ))}
       </div>
+
+      <form
+        action={createStageAction}
+        className="space-y-3 rounded-2xl border border-line bg-surface p-5"
+      >
+        <h2 className="font-semibold">새 아티스트 스테이지</h2>
+        <p className="text-xs text-muted">
+          멀티 테넌트용 스테이지를 추가합니다. 생성 후 헤더에서 전환할 수 있습니다.
+        </p>
+        <input
+          name="name"
+          required
+          placeholder="아티스트/스테이지 이름"
+          className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+        />
+        <input
+          name="slug"
+          required
+          placeholder="슬러그 (예: seoyuna)"
+          className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+        />
+        <input
+          name="tagline"
+          placeholder="태그라인"
+          className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+        />
+        <textarea
+          name="description"
+          rows={2}
+          placeholder="설명"
+          className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+        />
+        <button
+          type="submit"
+          className="rounded-full bg-black px-4 py-2 text-sm text-white"
+        >
+          스테이지 만들기
+        </button>
+      </form>
 
       <form
         action={updateStageAction}

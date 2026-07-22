@@ -215,6 +215,100 @@ async function ensureDemoMedia() {
         });
       }
     }
+
+    const stageCount = await prisma.stage.count();
+    if (stageCount < 2) {
+      const second = await prisma.stage.create({
+        data: {
+          name: "SEO YUNA",
+          slug: "seoyuna",
+          tagline: "Official Fan Community",
+          description:
+            "배우 서유나 공식 팬 커뮤니티 · 콘텐츠 · 멤버십 · 샵을 한곳에서.",
+          heroUrl: "/brand/content-hello.jpg",
+        },
+      });
+      await prisma.board.createMany({
+        data: [
+          {
+            stageId: second.id,
+            name: "FREE TALK",
+            slug: "free-talk",
+            icon: "list",
+            sortOrder: 1,
+          },
+          {
+            stageId: second.id,
+            name: "To. Yuna",
+            slug: "to-yuna",
+            icon: "list",
+            sortOrder: 2,
+          },
+        ],
+      });
+      const owner = await prisma.user.findFirst({
+        where: { role: "OWNER" },
+      });
+      if (owner) {
+        await prisma.story.create({
+          data: {
+            stageId: second.id,
+            authorId: owner.id,
+            body: "안녕하세요, 서유나입니다. 새 스테이지에서 만나요!",
+            imageUrl: "/brand/story-morning.jpg",
+          },
+        });
+      }
+      await prisma.content.create({
+        data: {
+          stageId: second.id,
+          title: "첫 인사 영상",
+          body: "서유나 공식 플랫폼 오픈 인사",
+          category: "OFFICIAL",
+          coverUrl: "/brand/content-hello.jpg",
+          membershipRequired: false,
+        },
+      });
+      await prisma.membershipPlan.create({
+        data: {
+          stageId: second.id,
+          name: "Official Membership",
+          description: "디지털 회원카드 · 전용 콘텐츠",
+          price: 35000,
+          durationDays: 365,
+          benefits: "디지털 회원카드|멤버십 전용 콘텐츠",
+        },
+      });
+      await prisma.product.create({
+        data: {
+          stageId: second.id,
+          name: "시즌 포토카드",
+          description: "서유나 시즌 포토카드 세트",
+          price: 16000,
+          stock: 80,
+          imageUrl: "/brand/product-photocard.jpg",
+        },
+      });
+      await prisma.scheduleEvent.create({
+        data: {
+          stageId: second.id,
+          title: "SEO YUNA Debut Stage",
+          description: "공식 스테이지 오픈 기념",
+          category: "EVENT",
+          allDay: true,
+          startsAt: new Date(),
+        },
+      });
+      await prisma.popRoom.create({
+        data: {
+          stageId: second.id,
+          title: "유나랑 수다 POP",
+          description: "오픈 기념 LIVE",
+          live: true,
+          membershipRequired: false,
+        },
+      });
+    }
   }
 
   console.log("Demo media URLs ensured.");

@@ -12,6 +12,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 6** — Schedule 캘린더 / Upcoming 일정
 - **Phase 7** — POP 라이브 채팅 (폴링)
 - **Phase 8** — 알림 고도화 (유형/뱃지/읽음 처리)
+- **Phase 9** — 멀티 스테이지(아티스트) 전환
 
 ## Toss Payments
 
@@ -67,5 +68,5 @@ Open http://localhost:3000
 
 ## Next phase ideas
 
-- 멀티 테넌트 (여러 아티스트)
 - WebSocket 기반 실시간 POP
+- 스테이지별 커스텀 도메인

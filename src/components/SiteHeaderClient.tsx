@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, CalendarDays, ShoppingBag, UserRound } from "lucide-react";
+import { StageSwitcher } from "@/components/StageSwitcher";
 
 const nav = [
   { href: "/", label: "Home" },
@@ -16,12 +17,16 @@ const nav = [
 
 export function SiteHeaderClient({
   stageName,
+  stageSlug,
+  stages,
   isLoggedIn,
   isOwner,
   unreadCount = 0,
   logoutAction,
 }: {
   stageName: string;
+  stageSlug: string;
+  stages: { id: string; name: string; slug: string }[];
   isLoggedIn: boolean;
   isOwner: boolean;
   unreadCount?: number;
@@ -39,16 +44,23 @@ export function SiteHeaderClient({
       }
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link
-          href="/"
-          className={
-            isHome
-              ? "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em] text-white"
-              : "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em]"
-          }
-        >
-          {stageName}
-        </Link>
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <Link
+            href="/"
+            className={
+              isHome
+                ? "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em] text-white"
+                : "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em]"
+            }
+          >
+            {stageName}
+          </Link>
+          <StageSwitcher
+            stages={stages}
+            currentSlug={stageSlug}
+            isHome={isHome}
+          />
+        </div>
 
         <nav
           className={
