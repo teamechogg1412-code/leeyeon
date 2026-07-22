@@ -11,9 +11,11 @@ import {
   startOfWeek,
 } from "date-fns";
 import { ko } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, BellRing } from "lucide-react";
+import { differenceInHours, isBefore, addHours } from "date-fns";
 import { getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
+import { sendUpcomingScheduleReminders } from "@/lib/scheduleReminders";
 
 const CATEGORY_STYLE: Record<string, string> = {
   EVENT: "bg-[#2f4a3c] text-white",
@@ -47,9 +49,22 @@ export default async function SchedulePage({
     orderBy: { startsAt: "asc" },
   });
 
+  // Best-effort: send due reminders when fans open Schedule (also covered by hourly cron).
+  try {
+    await sendUpcomingScheduleReminders(stage.id);
+  } catch {
+    // ignore reminder failures on page render
+  }
+
   const prev = format(addMonths(monthStart, -1), "yyyy-MM");
   const next = format(addMonths(monthStart, 1), "yyyy-MM");
-  const upcoming = events.filter((e) => e.startsAt >= new Date());
+  const now = new Date();
+  const upcoming = events.filter((e) => e.startsAt >= now);
+  const soon = upcoming.filter(
+    (e) =>
+      isBefore(e.startsAt, addHours(now, 24)) &&
+      differenceInHours(e.startsAt, now) >= 0
+  );
 
   return (
     <div className="page-shell max-w-4xl space-y-8">
@@ -80,6 +95,30 @@ export default async function SchedulePage({
           </Link>
         </div>
       </div>
+
+      {soon.length > 0 && (
+        <section className="rounded-2xl border border-[#e8d9c8] bg-[#fbf6f0] p-4">
+          <div className="mb-2 flex items-center gap-2 text-[#6b5535]">
+            <BellRing size={16} />
+            <h2 className="text-sm font-semibold">24시간 이내 일정</h2>
+          </div>
+          <div className="space-y-2">
+            {soon.map((event) => (
+              <div
+                key={event.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/80 px-3 py-2"
+              >
+                <p className="text-sm font-medium">{event.title}</p>
+                <time className="text-xs text-muted">
+                  {event.allDay
+                    ? format(event.startsAt, "M월 d일 (EEE)", { locale: ko })
+                    : format(event.startsAt, "M월 d일 HH:mm", { locale: ko })}
+                </time>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-line bg-surface">
         <div className="grid grid-cols-7 border-b border-line bg-[#fafafa] text-center text-[11px] font-medium text-muted">
@@ -161,6 +200,12 @@ export default async function SchedulePage({
                         locale: ko,
                       })}
                 </time>
+                {event.startsAt >= now &&
+                  isBefore(event.startsAt, addHours(now, 24)) && (
+                    <span className="rounded-full bg-[#f4f0e8] px-2 py-0.5 text-[10px] font-medium text-[#6b5535]">
+                      D-0 / 임박
+                    </span>
+                  )}
               </div>
               <h3 className="mt-2 text-[15px] font-semibold">{event.title}</h3>
               {event.description && (

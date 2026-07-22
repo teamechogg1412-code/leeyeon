@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "prisma db push && prisma db seed && next build",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/schedule-reminders",
+      "schedule": "0 * * * *"
+    }
+  ]
 }

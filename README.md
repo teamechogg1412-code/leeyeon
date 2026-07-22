@@ -14,6 +14,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 8** — 알림 고도화 (유형/뱃지/읽음 처리)
 - **Phase 9** — POP 실시간 (SSE + 폴링 폴백)
 - **Phase 10** — 이미지 업로드 UX (미리보기/드래그앤드롭)
+- **Phase 11** — 스케줄 리마인더 (24h 알림 + hourly cron)
 
 ## Toss Payments
 
@@ -67,7 +68,13 @@ Open http://localhost:3000
 `BLOB_READ_WRITE_TOKEN`이 없으면 업로드는 로컬 디스크에만 저장되어 Vercel에서 사라집니다.  
 로컬 파일 업로드(`public/uploads`)는 개발용 폴백입니다.
 
+### Schedule reminders
+
+- Hourly cron: `/api/cron/schedule-reminders`
+- Set `CRON_SECRET` in Vercel env (optional but recommended)
+- Events starting within 24 hours notify fans once (`remindedAt`)
+
 ## Next phase ideas
 
-- 스케줄 리마인더 푸시
 - 영상 직접 업로드 (Blob)
+- 브라우저 푸시 알림

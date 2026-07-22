@@ -131,6 +131,28 @@ async function ensureDemoMedia() {
       });
     }
 
+    const soonCount = await prisma.scheduleEvent.count({
+      where: {
+        stageId: stage.id,
+        startsAt: {
+          gte: new Date(),
+          lte: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      },
+    });
+    if (soonCount === 0) {
+      const soon = new Date(Date.now() + 6 * 60 * 60 * 1000);
+      await prisma.scheduleEvent.create({
+        data: {
+          stageId: stage.id,
+          title: "오늘 밤 짧은 인사 LIVE",
+          description: "24시간 이내 리마인더 데모 일정",
+          category: "BROADCAST",
+          startsAt: soon,
+        },
+      });
+    }
+
     const popCount = await prisma.popRoom.count({
       where: { stageId: stage.id },
     });
@@ -438,6 +460,13 @@ async function main() {
   const now = new Date();
   await prisma.scheduleEvent.createMany({
     data: [
+      {
+        stageId: stage.id,
+        title: "오늘 밤 짧은 인사 LIVE",
+        description: "24시간 이내 리마인더 데모 일정",
+        category: "BROADCAST",
+        startsAt: new Date(now.getTime() + 6 * 60 * 60 * 1000),
+      },
       {
         stageId: stage.id,
         title: "LEE YEON Official Membership Open",

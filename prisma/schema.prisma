@@ -271,12 +271,14 @@ model ScheduleEvent {
   endsAt      DateTime?
   allDay      Boolean   @default(false)
   category    String    @default("EVENT") // EVENT | BROADCAST | FANMEETING | RELEASE
+  remindedAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   stage Stage @relation(fields: [stageId], references: [id], onDelete: Cascade)
 
   @@index([stageId, startsAt])
+  @@index([remindedAt, startsAt])
 }
 
 model PopRoom {
