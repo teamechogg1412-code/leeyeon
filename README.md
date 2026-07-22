@@ -9,6 +9,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 3** — Shop 탭/상품상세, From 피드, Home 고도화
 - **Phase 4** — Contents 카테고리 캐러셀, Toss 결제 위젯(키 있으면) / 없으면 데모 결제
 - **Phase 5** — Vercel Blob 업로드, Contents/Shop/From 데모 썸네일
+- **Phase 6** — Schedule 캘린더 / Upcoming 일정
 
 ## Toss Payments
 
@@ -64,7 +65,6 @@ Open http://localhost:3000
 
 ## Next phase ideas
 
-- 스케줄 / 캘린더
 - POP / 라이브 채팅
 - 멀티 테넌트 (여러 아티스트)
 - 알림 고도화

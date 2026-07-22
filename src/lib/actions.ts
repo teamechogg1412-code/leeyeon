@@ -569,3 +569,40 @@ export async function updateStageAction(formData: FormData): Promise<void> {
   revalidatePath("/admin");
   redirect("/admin");
 }
+
+export async function createScheduleAction(formData: FormData): Promise<void> {
+  const { session, isOwner } = await getCurrentUserAccess();
+  if (!session?.user?.id || !isOwner) redirect("/login");
+
+  const title = String(formData.get("title") || "").trim();
+  const description = String(formData.get("description") || "").trim() || null;
+  const location = String(formData.get("location") || "").trim() || null;
+  const category = String(formData.get("category") || "EVENT").trim() || "EVENT";
+  const startsAtRaw = String(formData.get("startsAt") || "").trim();
+  const endsAtRaw = String(formData.get("endsAt") || "").trim();
+  const allDay = formData.get("allDay") === "on";
+  if (!title || !startsAtRaw) redirect("/admin");
+
+  const startsAt = new Date(startsAtRaw);
+  const endsAt = endsAtRaw ? new Date(endsAtRaw) : null;
+  if (Number.isNaN(startsAt.getTime())) redirect("/admin");
+
+  const stage = await getStage();
+  await prisma.scheduleEvent.create({
+    data: {
+      stageId: stage.id,
+      title,
+      description,
+      location,
+      category,
+      startsAt,
+      endsAt:
+        endsAt && !Number.isNaN(endsAt.getTime()) ? endsAt : null,
+      allDay,
+    },
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/admin");
+  redirect("/schedule");
+}

@@ -45,6 +45,7 @@ model Stage {
   contents        Content[]
   membershipPlans MembershipPlan[]
   products        Product[]
+  schedules       ScheduleEvent[]
 }
 
 model Board {
@@ -253,4 +254,22 @@ model Notification {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ScheduleEvent {
+  id          String    @id @default(cuid())
+  stageId     String
+  title       String
+  description String?
+  location    String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  allDay      Boolean   @default(false)
+  category    String    @default("EVENT") // EVENT | BROADCAST | FANMEETING | RELEASE
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  stage Stage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@index([stageId, startsAt])
 }

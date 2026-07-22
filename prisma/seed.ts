@@ -67,6 +67,71 @@ async function ensureDemoMedia() {
     });
   }
 
+  const stage = await prisma.stage.findFirst({ orderBy: { createdAt: "asc" } });
+  if (stage) {
+    const scheduleCount = await prisma.scheduleEvent.count({
+      where: { stageId: stage.id },
+    });
+    if (scheduleCount === 0) {
+      const now = new Date();
+      await prisma.scheduleEvent.createMany({
+        data: [
+          {
+            stageId: stage.id,
+            title: "LEE YEON Official Membership Open",
+            description: "공식 멤버십 오픈 안내",
+            category: "EVENT",
+            allDay: true,
+            startsAt: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() + 2
+            ),
+          },
+          {
+            stageId: stage.id,
+            title: "라디오 게스트 출연",
+            description: "심야 라디오 라이브 출연",
+            location: "방송국",
+            category: "BROADCAST",
+            startsAt: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() + 5,
+              22,
+              0
+            ),
+          },
+          {
+            stageId: stage.id,
+            title: "팬미팅 티켓 오픈",
+            description: "2026 팬미팅 선예매",
+            category: "FANMEETING",
+            startsAt: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() + 9,
+              20,
+              0
+            ),
+          },
+          {
+            stageId: stage.id,
+            title: "시즌 포토카드 출시",
+            description: "공식 샵 한정 발매",
+            category: "RELEASE",
+            allDay: true,
+            startsAt: new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() + 14
+            ),
+          },
+        ],
+      });
+    }
+  }
+
   console.log("Demo media URLs ensured.");
 }
 
@@ -280,6 +345,55 @@ async function main() {
       status: "ACTIVE",
       endsAt,
     },
+  });
+
+  const now = new Date();
+  await prisma.scheduleEvent.createMany({
+    data: [
+      {
+        stageId: stage.id,
+        title: "LEE YEON Official Membership Open",
+        description: "공식 멤버십 오픈 안내",
+        category: "EVENT",
+        allDay: true,
+        startsAt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2),
+      },
+      {
+        stageId: stage.id,
+        title: "라디오 게스트 출연",
+        description: "심야 라디오 라이브 출연",
+        location: "방송국",
+        category: "BROADCAST",
+        startsAt: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 5,
+          22,
+          0
+        ),
+      },
+      {
+        stageId: stage.id,
+        title: "팬미팅 티켓 오픈",
+        description: "2026 팬미팅 선예매",
+        category: "FANMEETING",
+        startsAt: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 9,
+          20,
+          0
+        ),
+      },
+      {
+        stageId: stage.id,
+        title: "시즌 포토카드 출시",
+        description: "공식 샵 한정 발매",
+        category: "RELEASE",
+        allDay: true,
+        startsAt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 14),
+      },
+    ],
   });
 
   console.log("Seed complete");

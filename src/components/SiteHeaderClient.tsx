@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ShoppingBag, UserRound } from "lucide-react";
+import { Bell, CalendarDays, ShoppingBag, UserRound } from "lucide-react";
 
 const nav = [
   { href: "/", label: "Home" },
   { href: "/from", label: "From Yeon" },
   { href: "/contents", label: "Contents" },
   { href: "/community", label: "Community" },
+  { href: "/schedule", label: "Schedule" },
   { href: "/shop", label: "Shop" },
 ];
 
@@ -82,6 +83,17 @@ export function SiteHeaderClient({
           {isLoggedIn ? (
             <>
               <Link
+                href="/schedule"
+                className={
+                  isHome
+                    ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                    : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
+                }
+                aria-label="Schedule"
+              >
+                <CalendarDays size={18} />
+              </Link>
+              <Link
                 href="/notifications"
                 className={
                   isHome
@@ -141,6 +153,17 @@ export function SiteHeaderClient({
             </>
           ) : (
             <>
+              <Link
+                href="/schedule"
+                className={
+                  isHome
+                    ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                    : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
+                }
+                aria-label="Schedule"
+              >
+                <CalendarDays size={18} />
+              </Link>
               <Link
                 href="/shop"
                 className={

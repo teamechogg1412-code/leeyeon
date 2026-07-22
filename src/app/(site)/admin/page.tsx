@@ -5,6 +5,7 @@ import {
   createContentAction,
   createMembershipPlanAction,
   createProductAction,
+  createScheduleAction,
   createStoryAction,
   updateStageAction,
 } from "@/lib/actions";
@@ -237,6 +238,61 @@ export default async function AdminPage() {
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="membershipRequired" />
             멤버십 전용
+          </label>
+          <button
+            type="submit"
+            className="rounded-full bg-black px-4 py-2 text-sm text-white"
+          >
+            등록
+          </button>
+        </form>
+
+        <form
+          action={createScheduleAction}
+          className="space-y-3 rounded-2xl border border-line bg-surface p-5"
+        >
+          <h2 className="font-semibold">일정 등록</h2>
+          <input
+            name="title"
+            required
+            placeholder="일정 제목"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
+          <textarea
+            name="description"
+            rows={3}
+            placeholder="설명"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
+          <input
+            name="location"
+            placeholder="장소"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
+          <select
+            name="category"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+            defaultValue="EVENT"
+          >
+            <option value="EVENT">EVENT</option>
+            <option value="BROADCAST">BROADCAST</option>
+            <option value="FANMEETING">FANMEETING</option>
+            <option value="RELEASE">RELEASE</option>
+          </select>
+          <input
+            name="startsAt"
+            type="datetime-local"
+            required
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
+          <input
+            name="endsAt"
+            type="datetime-local"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="allDay" />
+            하루 종일
           </label>
           <button
             type="submit"
