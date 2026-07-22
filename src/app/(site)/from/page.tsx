@@ -5,6 +5,7 @@ import { createStoryAction } from "@/lib/actions";
 import { avatarColor, avatarInitial } from "@/lib/avatar";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
+import { ImageUploadField } from "@/components/ImageUploadField";
 
 export default async function FromPage() {
   const stage = await getStage();
@@ -41,14 +42,16 @@ export default async function FromPage() {
               required
             />
           </div>
-          <div className="flex items-center justify-between gap-3 pl-[52px]">
-            <input name="image" type="file" accept="image/*" className="text-xs" />
-            <button
-              type="submit"
-              className="rounded-full bg-black px-4 py-2 text-sm text-white"
-            >
-              게시하기
-            </button>
+          <div className="space-y-3 pl-[52px]">
+            <ImageUploadField label="이미지 (선택)" compact />
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="rounded-full bg-black px-4 py-2 text-sm text-white"
+              >
+                게시하기
+              </button>
+            </div>
           </div>
         </form>
       )}

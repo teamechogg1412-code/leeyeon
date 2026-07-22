@@ -12,6 +12,7 @@ import {
 } from "@/lib/actions";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
+import { ImageUploadField } from "@/components/ImageUploadField";
 
 export default async function AdminPage() {
   const { isOwner } = await getCurrentUserAccess();
@@ -62,6 +63,7 @@ export default async function AdminPage() {
 
       <form
         action={updateStageAction}
+        encType="multipart/form-data"
         className="space-y-3 rounded-2xl border border-line bg-surface p-5"
       >
         <h2 className="font-semibold">스테이지 설정</h2>
@@ -83,6 +85,14 @@ export default async function AdminPage() {
           rows={2}
           className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
         />
+        <ImageUploadField
+          name="hero"
+          label="히어로 이미지 (선택)"
+          hint="메인 화면 배경으로 사용됩니다"
+        />
+        {stage.heroUrl && (
+          <p className="text-[11px] text-muted">현재: {stage.heroUrl}</p>
+        )}
         <button
           type="submit"
           className="rounded-full bg-black px-4 py-2 text-sm text-white"
@@ -196,7 +206,7 @@ export default async function AdminPage() {
             className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
             placeholder="팬 메시지"
           />
-          <input name="image" type="file" accept="image/*" className="text-sm" />
+          <ImageUploadField label="이미지 (선택)" compact />
           <button
             type="submit"
             className="rounded-full bg-black px-4 py-2 text-sm text-white"
@@ -229,13 +239,16 @@ export default async function AdminPage() {
             placeholder="영상 URL (YouTube / mp4)"
             className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
           />
+          <p className="-mt-1 text-[11px] text-muted">
+            YouTube 링크 또는 mp4 주소를 넣으면 콘텐츠 상세에서 재생됩니다.
+          </p>
           <input
             name="category"
             defaultValue="OFFICIAL"
             placeholder="카테고리 (예: OFFICIAL)"
             className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
           />
-          <input name="image" type="file" accept="image/*" className="text-sm" />
+          <ImageUploadField label="커버 이미지" compact />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="membershipRequired" />
             멤버십 전용
@@ -366,7 +379,7 @@ export default async function AdminPage() {
             defaultValue={50}
             className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
           />
-          <input name="image" type="file" accept="image/*" className="text-sm" />
+          <ImageUploadField label="상품 이미지" compact />
           <button
             type="submit"
             className="rounded-full bg-black px-4 py-2 text-sm text-white"

@@ -610,10 +610,21 @@ export async function updateStageAction(formData: FormData): Promise<void> {
   const description = String(formData.get("description") || "").trim();
   if (!name) redirect("/admin");
 
+  const hero = formData.get("hero");
+  const heroUrl = await saveUploadedImage(
+    hero instanceof File ? hero : null,
+    "hero"
+  );
+
   const stage = await getStage();
   await prisma.stage.update({
     where: { id: stage.id },
-    data: { name, tagline, description },
+    data: {
+      name,
+      tagline,
+      description,
+      ...(heroUrl ? { heroUrl } : {}),
+    },
   });
 
   revalidatePath("/");

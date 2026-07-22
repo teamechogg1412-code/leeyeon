@@ -13,6 +13,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 7** — POP 라이브 채팅 (폴링)
 - **Phase 8** — 알림 고도화 (유형/뱃지/읽음 처리)
 - **Phase 9** — POP 실시간 (SSE + 폴링 폴백)
+- **Phase 10** — 이미지 업로드 UX (미리보기/드래그앤드롭)
 
 ## Toss Payments
 
@@ -69,4 +70,4 @@ Open http://localhost:3000
 ## Next phase ideas
 
 - 스케줄 리마인더 푸시
-- 이미지/영상 업로드 UX 개선
+- 영상 직접 업로드 (Blob)

@@ -3,6 +3,7 @@ import { createPostAction } from "@/lib/actions";
 import { auth } from "@/lib/auth";
 import { getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
+import { ImageUploadField } from "@/components/ImageUploadField";
 
 export default async function WritePage({
   searchParams,
@@ -60,15 +61,7 @@ export default async function WritePage({
             className="w-full resize-y rounded-xl border border-line bg-surface px-3 py-2.5 text-sm outline-none"
           />
         </label>
-        <label className="block text-sm">
-          <span className="mb-1.5 block text-muted">이미지 (선택, 5MB 이하)</span>
-          <input
-            name="image"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            className="w-full text-sm"
-          />
-        </label>
+        <ImageUploadField label="이미지 (선택)" />
         <button
           type="submit"
           className="rounded-full bg-black px-5 py-2.5 text-sm text-white"
