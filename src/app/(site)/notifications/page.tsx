@@ -14,6 +14,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { markAllNotificationsReadAction } from "@/lib/actions";
 import { NotificationItem } from "@/components/NotificationItem";
+import { PushEnableButton } from "@/components/PushEnableButton";
+import { isPushConfigured } from "@/lib/webpush";
 
 const TYPE_META: Record<
   string,
@@ -80,6 +82,9 @@ export default async function NotificationsPage() {
     take: 50,
   });
   const unread = notifications.filter((n) => !n.read).length;
+  const vapidPublicKey = isPushConfigured()
+    ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null
+    : null;
 
   return (
     <div className="page-shell max-w-xl space-y-5">
@@ -103,6 +108,8 @@ export default async function NotificationsPage() {
           </form>
         )}
       </div>
+
+      <PushEnableButton vapidPublicKey={vapidPublicKey} />
 
       <div className="overflow-hidden rounded-2xl border border-line bg-surface divide-y divide-line">
         {notifications.length === 0 && (

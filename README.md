@@ -16,6 +16,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 10** — 이미지 업로드 UX (미리보기/드래그앤드롭)
 - **Phase 11** — 스케줄 리마인더 (24h 알림 + hourly cron)
 - **Phase 12** — 영상 직접 업로드 (Blob client upload + 로컬 폴백)
+- **Phase 13** — 브라우저 푸시 알림 (Web Push + VAPID)
 
 ## Toss Payments
 
@@ -64,6 +65,8 @@ Open http://localhost:3000
 3. **Storage**에서 **Blob** 추가 (Public) — `BLOB_READ_WRITE_TOKEN` 자동 주입
 4. Environment Variables 추가:
    - `AUTH_SECRET` (랜덤 긴 문자열)
+   - (선택) Web Push: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+   - (선택) `CRON_SECRET`
 5. Deploy — build에서 `prisma db push` + seed + `next build` 실행
 
 `BLOB_READ_WRITE_TOKEN`이 없으면 업로드는 로컬 디스크에만 저장되어 Vercel에서 사라집니다.  
@@ -82,6 +85,19 @@ Open http://localhost:3000
 - 없으면 서버 액션 로컬 `public/uploads/videos` 폴백
 - YouTube / 외부 mp4 URL도 계속 지원
 
+### Browser push
+
+1. Generate keys: `npx web-push generate-vapid-keys`
+2. Set in `.env` / Vercel:
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT` (예: `mailto:owner@fanstage.app`)
+3. Notifications 페이지에서 **브라우저 푸시 켜기**
+4. 인앱 알림(`notifyFans` / `notifyUser`)과 함께 OS 푸시도 발송
+
+키가 없으면 인앱 알림만 동작하고 푸시는 건너뜁니다.
+
 ## Next phase ideas
 
-- 브라우저 푸시 알림
+- 멤버십 티어별 배지 / 프로필 커스텀
+- 검색·필터 고도화

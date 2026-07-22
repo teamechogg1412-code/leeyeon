@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { sendPushToUsers } from "@/lib/webpush";
 
 export type NotifyType =
   | "COMMENT"
@@ -28,9 +29,15 @@ export async function notifyUser(input: {
       type: input.type || "SYSTEM",
     },
   });
+
+  void sendPushToUsers([input.userId], {
+    title: input.title,
+    body: input.body,
+    href: input.href,
+  });
 }
 
-/** Notify fans (and optionally all non-owner users). Caps at 200. */
+/** Notify fans (and optionally members only). Caps at 200. */
 export async function notifyFans(input: {
   title: string;
   body: string;
@@ -71,4 +78,13 @@ export async function notifyFans(input: {
       type: input.type || "SYSTEM",
     })),
   });
+
+  void sendPushToUsers(
+    users.map((u) => u.id),
+    {
+      title: input.title,
+      body: input.body,
+      href: input.href,
+    }
+  );
 }
