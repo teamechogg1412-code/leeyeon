@@ -36,6 +36,4 @@ export async function getCurrentUserAccess() {
   };
 }
 
-export function formatPrice(won: number) {
-  return new Intl.NumberFormat("ko-KR").format(won) + "원";
-}
+export { formatPrice } from "@/lib/format";

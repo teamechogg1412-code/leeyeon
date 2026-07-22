@@ -222,6 +222,17 @@ export default async function AdminPage() {
             placeholder="내용"
             className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
           />
+          <input
+            name="videoUrl"
+            placeholder="영상 URL (YouTube / mp4)"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
+          <input
+            name="category"
+            defaultValue="OFFICIAL"
+            placeholder="카테고리 (예: OFFICIAL)"
+            className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none"
+          />
           <input name="image" type="file" accept="image/*" className="text-sm" />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="membershipRequired" />

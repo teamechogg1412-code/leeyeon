@@ -1,12 +1,20 @@
 import Link from "next/link";
-import {
-  purchaseMembershipAction,
-  purchaseProductAction,
-} from "@/lib/actions";
+import { purchaseMembershipAction } from "@/lib/actions";
 import { formatPrice, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
 
-export default async function ShopPage() {
+type Tab = "all" | "md" | "membership";
+
+export default async function ShopPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab: tabRaw } = await searchParams;
+  const tab = (["all", "md", "membership"].includes(tabRaw || "")
+    ? tabRaw
+    : "all") as Tab;
+
   const stage = await getStage();
   const [plans, products] = await Promise.all([
     prisma.membershipPlan.findMany({
@@ -18,92 +26,143 @@ export default async function ShopPage() {
     }),
   ]);
 
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "all", label: "ALL" },
+    { key: "membership", label: "Membership" },
+    { key: "md", label: "MD" },
+  ];
+
   return (
-    <div className="page-shell space-y-14">
-      <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">
-          Shop
-        </h1>
-        <p className="mt-2 text-sm text-muted">
-          멤버십과 공식 MD를 한곳에서
-        </p>
-      </div>
-
-      <section>
-        <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-lg font-semibold">Membership</h2>
-          <Link href="/shop/membership" className="text-xs text-muted">
-            자세히
+    <div className="page-shell">
+      <nav className="flex gap-6 border-b border-line text-[14px]">
+        {tabs.map((t) => (
+          <Link
+            key={t.key}
+            href={`/shop?tab=${t.key}`}
+            className={`-mb-px border-b-2 pb-3 ${
+              tab === t.key
+                ? "border-black font-semibold text-black"
+                : "border-transparent text-black/45 hover:text-black"
+            }`}
+          >
+            {t.label}
           </Link>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className="rounded-2xl border border-line bg-surface p-6"
-            >
-              <h3 className="text-xl font-semibold">{plan.name}</h3>
-              <p className="mt-2 text-sm text-muted">{plan.description}</p>
-              <p className="mt-4 text-2xl font-semibold">
-                {formatPrice(plan.price)}
-              </p>
-              <ul className="mt-4 space-y-1.5 text-sm text-black/70">
-                {plan.benefits.split("|").map((b) => (
-                  <li key={b}>· {b}</li>
-                ))}
-              </ul>
-              <form action={purchaseMembershipAction.bind(null, plan.id)}>
-                <button
-                  type="submit"
-                  className="mt-6 rounded-full bg-black px-5 py-2.5 text-sm text-white"
-                >
-                  가입하기 (데모 결제)
-                </button>
-              </form>
-            </div>
-          ))}
-        </div>
-      </section>
+        ))}
+      </nav>
 
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">MD</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="overflow-hidden rounded-2xl border border-line bg-surface"
-            >
-              {product.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="h-40 w-full object-cover"
-                />
-              ) : (
-                <div className="h-40 bg-gradient-to-br from-[#ece7e1] to-[#d8cfc4]" />
-              )}
-              <div className="p-4">
-                <h3 className="font-medium">{product.name}</h3>
-                <p className="mt-1 text-xs text-muted">{product.description}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="font-semibold">
-                    {formatPrice(product.price)}
-                  </span>
-                  <form action={purchaseProductAction.bind(null, product.id)}>
+      {(tab === "all" || tab === "membership") && (
+        <section className="mt-8">
+          {tab === "all" && (
+            <div className="mb-4 flex items-end justify-between">
+              <h2 className="text-base font-semibold">Membership</h2>
+              <Link
+                href="/shop?tab=membership"
+                className="text-xs text-muted hover:text-black"
+              >
+                Go to Membership &gt;
+              </Link>
+            </div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {plans.map((plan) => (
+              <div
+                key={plan.id}
+                className="overflow-hidden rounded-xl border border-line bg-surface"
+              >
+                <div className="flex aspect-square items-end bg-gradient-to-br from-[#111] to-[#333] p-5 text-white">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/50">
+                      Membership
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold">{plan.name}</h3>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p className="text-sm text-muted line-clamp-2">
+                    {plan.description}
+                  </p>
+                  <p className="mt-3 text-[17px] font-semibold">
+                    {formatPrice(plan.price)}
+                  </p>
+                  <form action={purchaseMembershipAction.bind(null, plan.id)}>
                     <button
                       type="submit"
-                      className="rounded-full border border-black/15 px-3 py-1.5 text-xs"
+                      className="mt-4 w-full rounded-full bg-black py-2.5 text-sm text-white"
                     >
-                      구매
+                      가입하기
                     </button>
                   </form>
+                  <Link
+                    href="/shop/membership"
+                    className="mt-2 block text-center text-xs text-muted hover:text-black"
+                  >
+                    혜택 자세히
+                  </Link>
                 </div>
               </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(tab === "all" || tab === "md") && (
+        <section className={tab === "all" ? "mt-12" : "mt-8"}>
+          {tab === "all" && (
+            <div className="mb-4 flex items-end justify-between">
+              <h2 className="text-base font-semibold">MD</h2>
+              <Link
+                href="/shop?tab=md"
+                className="text-xs text-muted hover:text-black"
+              >
+                Go to MD &gt;
+              </Link>
             </div>
-          ))}
-        </div>
-      </section>
+          )}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+            {products.map((product) => {
+              const soldOut = product.stock < 1;
+              return (
+                <Link
+                  key={product.id}
+                  href={`/shop/products/${product.id}`}
+                  className="group block"
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-lg bg-[#f0eeea]">
+                    {product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#ece7e1] to-[#d8cfc4] text-xs text-black/30">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="mt-3 line-clamp-2 text-[14px] leading-snug">
+                    {product.name}
+                  </h3>
+                  <p className="mt-1.5 text-[15px] font-semibold">
+                    {formatPrice(product.price)}
+                  </p>
+                  {soldOut && (
+                    <span className="mt-2 inline-block bg-black px-2 py-1 text-[11px] text-white">
+                      Sold out
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+          {products.length === 0 && (
+            <p className="py-16 text-center text-sm text-muted">
+              등록된 상품이 없습니다.
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }

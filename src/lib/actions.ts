@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { auth, signIn, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fulfillPaidOrder } from "@/lib/fulfill";
+import { createOrderCode, isTossEnabled } from "@/lib/order";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { saveUploadedImage } from "@/lib/upload";
 
@@ -110,6 +112,35 @@ export async function deletePostAction(formData: FormData): Promise<void> {
   redirect(`/community/board/${boardId}`);
 }
 
+export async function toggleReactionAction(formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const postId = String(formData.get("postId") || "");
+  const type = String(formData.get("type") || "");
+  if (!postId || !["like", "love", "cool"].includes(type)) return;
+
+  const existing = await prisma.postReaction.findUnique({
+    where: {
+      postId_userId_type: {
+        postId,
+        userId: session.user.id,
+        type,
+      },
+    },
+  });
+
+  if (existing) {
+    await prisma.postReaction.delete({ where: { id: existing.id } });
+  } else {
+    await prisma.postReaction.create({
+      data: { postId, userId: session.user.id, type },
+    });
+  }
+
+  revalidatePath(`/community/post/${postId}`);
+}
+
 export async function createCommentAction(formData: FormData): Promise<void> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -163,15 +194,13 @@ export async function purchaseMembershipAction(planId: string): Promise<void> {
   const plan = await prisma.membershipPlan.findUnique({ where: { id: planId } });
   if (!plan || !plan.active) redirect("/shop/membership");
 
-  const endsAt = new Date();
-  endsAt.setDate(endsAt.getDate() + plan.durationDays);
-
   const order = await prisma.order.create({
     data: {
       userId: session.user.id,
       type: "MEMBERSHIP",
-      status: "PAID",
+      status: "PENDING",
       total: plan.price,
+      orderCode: createOrderCode("mem"),
       items: {
         create: {
           planId: plan.id,
@@ -183,33 +212,15 @@ export async function purchaseMembershipAction(planId: string): Promise<void> {
     },
   });
 
-  await prisma.membership.updateMany({
-    where: { userId: session.user.id, status: "ACTIVE" },
-    data: { status: "CANCELLED" },
-  });
+  if (!isTossEnabled()) {
+    await fulfillPaidOrder(order.id);
+    revalidatePath("/shop");
+    revalidatePath("/contents");
+    revalidatePath("/community");
+    redirect(`/shop/orders/${order.id}`);
+  }
 
-  await prisma.membership.create({
-    data: {
-      userId: session.user.id,
-      planId: plan.id,
-      status: "ACTIVE",
-      endsAt,
-    },
-  });
-
-  await prisma.notification.create({
-    data: {
-      userId: session.user.id,
-      title: "멤버십 가입 완료",
-      body: `${plan.name} 멤버십이 활성화되었습니다.`,
-      href: "/shop/membership",
-    },
-  });
-
-  revalidatePath("/shop");
-  revalidatePath("/contents");
-  revalidatePath("/community");
-  redirect(`/shop/orders/${order.id}`);
+  redirect(`/checkout/${order.id}`);
 }
 
 export async function purchaseProductAction(productId: string): Promise<void> {
@@ -225,8 +236,9 @@ export async function purchaseProductAction(productId: string): Promise<void> {
     data: {
       userId: session.user.id,
       type: "PRODUCT",
-      status: "PAID",
+      status: "PENDING",
       total: product.price,
+      orderCode: createOrderCode("prd"),
       items: {
         create: {
           productId: product.id,
@@ -238,22 +250,70 @@ export async function purchaseProductAction(productId: string): Promise<void> {
     },
   });
 
-  await prisma.product.update({
-    where: { id: product.id },
-    data: { stock: { decrement: 1 } },
-  });
+  if (!isTossEnabled()) {
+    await fulfillPaidOrder(order.id);
+    revalidatePath("/shop");
+    redirect(`/shop/orders/${order.id}`);
+  }
 
-  await prisma.notification.create({
-    data: {
+  redirect(`/checkout/${order.id}`);
+}
+
+export async function confirmTossPaymentAction(input: {
+  paymentKey: string;
+  orderId: string;
+  amount: number;
+}): Promise<{ ok: true; orderId: string } | { ok: false; message: string }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, message: "로그인이 필요합니다." };
+  }
+
+  const order = await prisma.order.findFirst({
+    where: {
+      OR: [{ id: input.orderId }, { orderCode: input.orderId }],
       userId: session.user.id,
-      title: "주문 완료",
-      body: `${product.name} 주문이 완료되었습니다.`,
-      href: `/shop/orders/${order.id}`,
     },
   });
+  if (!order) return { ok: false, message: "주문을 찾을 수 없습니다." };
+  if (order.total !== input.amount) {
+    return { ok: false, message: "결제 금액이 일치하지 않습니다." };
+  }
+  if (order.status === "PAID") return { ok: true, orderId: order.id };
 
+  const secretKey = process.env.TOSS_SECRET_KEY;
+  if (!secretKey) {
+    await fulfillPaidOrder(order.id);
+    return { ok: true, orderId: order.id };
+  }
+
+  const encrypted = Buffer.from(`${secretKey}:`).toString("base64");
+  const res = await fetch("https://api.tosspayments.com/v1/payments/confirm", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${encrypted}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      paymentKey: input.paymentKey,
+      orderId: order.orderCode,
+      amount: input.amount,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    return {
+      ok: false,
+      message: err?.message || "결제 승인에 실패했습니다.",
+    };
+  }
+
+  await fulfillPaidOrder(order.id, input.paymentKey);
   revalidatePath("/shop");
-  redirect(`/shop/orders/${order.id}`);
+  revalidatePath("/contents");
+  revalidatePath("/community");
+  return { ok: true, orderId: order.id };
 }
 
 export async function createStoryAction(formData: FormData): Promise<void> {
@@ -289,6 +349,8 @@ export async function createContentAction(formData: FormData): Promise<void> {
 
   const title = String(formData.get("title") || "").trim();
   const body = String(formData.get("body") || "").trim();
+  const category = String(formData.get("category") || "OFFICIAL").trim();
+  const videoUrl = String(formData.get("videoUrl") || "").trim() || null;
   const membershipRequired = formData.get("membershipRequired") === "on";
   if (!title || !body) redirect("/admin");
 
@@ -304,7 +366,9 @@ export async function createContentAction(formData: FormData): Promise<void> {
       stageId: stage.id,
       title,
       body,
+      category: category || "OFFICIAL",
       coverUrl,
+      videoUrl,
       membershipRequired,
     },
   });
@@ -312,6 +376,75 @@ export async function createContentAction(formData: FormData): Promise<void> {
   revalidatePath("/contents");
   revalidatePath("/admin");
   redirect("/contents");
+}
+
+export async function createContentCommentAction(
+  formData: FormData
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const contentId = String(formData.get("contentId") || "");
+  const body = String(formData.get("body") || "").trim();
+  if (!contentId || !body) return;
+
+  await prisma.contentComment.create({
+    data: { contentId, authorId: session.user.id, body },
+  });
+
+  revalidatePath(`/contents/${contentId}`);
+}
+
+export async function deleteContentCommentAction(
+  formData: FormData
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const commentId = String(formData.get("commentId") || "");
+  const comment = await prisma.contentComment.findUnique({
+    where: { id: commentId },
+  });
+  if (!comment) return;
+
+  const isOwner =
+    session.user.role === "OWNER" || session.user.role === "ADMIN";
+  if (comment.authorId !== session.user.id && !isOwner) return;
+
+  await prisma.contentComment.delete({ where: { id: commentId } });
+  revalidatePath(`/contents/${comment.contentId}`);
+}
+
+export async function toggleContentReactionAction(
+  formData: FormData
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const contentId = String(formData.get("contentId") || "");
+  const type = String(formData.get("type") || "");
+  const allowed = ["like", "love", "cool", "fire", "clap", "wow"];
+  if (!contentId || !allowed.includes(type)) return;
+
+  const existing = await prisma.contentReaction.findUnique({
+    where: {
+      contentId_userId_type: {
+        contentId,
+        userId: session.user.id,
+        type,
+      },
+    },
+  });
+
+  if (existing) {
+    await prisma.contentReaction.delete({ where: { id: existing.id } });
+  } else {
+    await prisma.contentReaction.create({
+      data: { contentId, userId: session.user.id, type },
+    });
+  }
+
+  revalidatePath(`/contents/${contentId}`);
 }
 
 export async function createProductAction(formData: FormData): Promise<void> {

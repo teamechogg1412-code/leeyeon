@@ -5,7 +5,20 @@ b.stage 스타일 올인원 팬 플랫폼
 ## Phase status
 
 - **Phase 1** — Home / From / Contents / Community / Shop / Membership / Admin MVP
-- **Phase 2** — 이미지 업로드, 검색·페이지네이션, 글/댓글 삭제, Admin 게시판·멤버십 관리, Vercel 준비
+- **Phase 2** — 이미지 업로드, 검색·페이지네이션, 글/댓글 삭제, Admin 게시판·멤버십 관리
+- **Phase 3** — Shop 탭/상품상세, From 피드, Home 고도화
+- **Phase 4** — Contents 카테고리 캐러셀, Toss 결제 위젯(키 있으면) / 없으면 데모 결제
+
+## Toss Payments
+
+`.env`에 테스트 키를 넣으면 결제 위젯이 활성화됩니다.
+
+```env
+NEXT_PUBLIC_TOSS_CLIENT_KEY=test_ck_...
+TOSS_SECRET_KEY=test_sk_...
+```
+
+키가 없으면 기존처럼 **데모 결제**로 바로 주문이 완료됩니다.
 
 > GitHub Pages(`*.github.io`)는 정적 미리보기만 제공합니다.  
 > 실제 앱은 로컬 또는 Vercel에서 실행하세요.

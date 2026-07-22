@@ -8,6 +8,9 @@ async function main() {
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.membership.deleteMany();
+  await prisma.contentReaction.deleteMany();
+  await prisma.contentComment.deleteMany();
+  await prisma.postReaction.deleteMany();
   await prisma.comment.deleteMany();
   await prisma.post.deleteMany();
   await prisma.board.deleteMany();
@@ -55,6 +58,7 @@ async function main() {
       name: "LEE YEON",
       slug: "leeyeon",
       tagline: "Official Fan Community",
+      heroUrl: "/uploads/leeyeon-hero.jpg",
       description:
         "배우 이연 공식 팬 커뮤니티 · 콘텐츠 · 멤버십 · 샵을 한곳에서.",
     },
@@ -161,14 +165,25 @@ async function main() {
     data: [
       {
         stageId: stage.id,
+        title: "'사랑의 맘보' 퍼포먼스 클립💌",
+        body: "이연의 퍼포먼스 클립을 만나보세요.\n#퍼포먼스 #공식콘텐츠",
+        category: "사랑의 맘보",
+        videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        membershipRequired: false,
+      },
+      {
+        stageId: stage.id,
         title: "첫 인사 영상",
         body: "공식 플랫폼 오픈을 맞아 이연이 전하는 첫 인사입니다.",
+        category: "OFFICIAL",
+        videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         membershipRequired: false,
       },
       {
         stageId: stage.id,
         title: "멤버십 전용 비하인드",
         body: "촬영장 비하인드 컷과 메시지를 멤버십 회원에게만 공개합니다.",
+        category: "OFFICIAL",
         membershipRequired: true,
       },
     ],

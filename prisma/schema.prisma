@@ -18,12 +18,15 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  posts         Post[]
-  comments      Comment[]
-  stories       Story[]
-  memberships   Membership[]
-  orders        Order[]
-  notifications Notification[]
+  posts            Post[]
+  comments         Comment[]
+  contentComments  ContentComment[]
+  stories          Story[]
+  memberships      Membership[]
+  orders           Order[]
+  notifications    Notification[]
+  reactions        PostReaction[]
+  contentReactions ContentReaction[]
 }
 
 model Stage {
@@ -69,12 +72,28 @@ model Post {
   title     String
   body      String
   imageUrl  String?
+  viewCount Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  board    Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  comments Comment[]
+  board     Board          @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  reactions PostReaction[]
+}
+
+model PostReaction {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  type      String // like | love | cool
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId, type])
+  @@index([postId])
 }
 
 model Comment {
@@ -107,12 +126,45 @@ model Content {
   stageId            String
   title              String
   body               String
+  category           String   @default("OFFICIAL")
   coverUrl           String?
+  videoUrl           String?
   membershipRequired Boolean  @default(false)
+  viewCount          Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  stage Stage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stage     Stage             @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  comments  ContentComment[]
+  reactions ContentReaction[]
+}
+
+model ContentComment {
+  id        String   @id @default(cuid())
+  contentId String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([contentId])
+}
+
+model ContentReaction {
+  id        String   @id @default(cuid())
+  contentId String
+  userId    String
+  type      String // like | love | cool | fire | clap | wow
+  createdAt DateTime @default(now())
+
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, userId, type])
+  @@index([contentId])
 }
 
 model MembershipPlan {
@@ -164,13 +216,15 @@ model Product {
 }
 
 model Order {
-  id        String   @id @default(cuid())
-  userId    String
-  type      String // MEMBERSHIP | PRODUCT
-  status    String   @default("PENDING") // PENDING | PAID | CANCELLED | REFUNDED
-  total     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  type        String // MEMBERSHIP | PRODUCT
+  status      String   @default("PENDING") // PENDING | PAID | CANCELLED | REFUNDED
+  total       Int
+  orderCode   String   @unique
+  paymentKey  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items OrderItem[]

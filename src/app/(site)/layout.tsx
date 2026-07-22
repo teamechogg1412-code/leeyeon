@@ -10,7 +10,7 @@ export default async function SiteLayout({
   return (
     <>
       <SiteHeader stageName={stage.name} />
-      <main className="flex-1 pb-16 pt-6">{children}</main>
+      <main className="flex-1 pb-16 pt-0">{children}</main>
     </>
   );
 }

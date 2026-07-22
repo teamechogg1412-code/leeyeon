@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
+  --background: #f6f6f6;
   --foreground: #111111;
   --muted: #6b6b6b;
   --line: rgba(0, 0, 0, 0.08);
@@ -38,20 +38,31 @@ a {
 .page-shell {
   width: min(1120px, calc(100% - 2rem));
   margin-inline: auto;
+  padding-top: 1.5rem;
+}
+
+.hero-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.hero-brand-title {
+  font-style: italic;
 }
 
 .fade-up {
-  animation: fadeUp 0.55s ease both;
+  animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .fade-up-delay {
-  animation: fadeUp 0.7s ease 0.12s both;
+  animation: fadeUp 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.14s both;
 }
 
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
