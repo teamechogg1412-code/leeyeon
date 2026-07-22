@@ -25,6 +25,21 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 19** — PWA (manifest, offline shell, install banner)
 - **Phase 20** — Toss 실결제 전환 (계획) — 테스트키 → 라이브키, 데모 폴백 정리, 운영 보완
 - **영상 하이브리드** — YouTube 링크(권장) + 직접 업로드(짧은 전용 클립) 병행
+- **Lookbook (Stardom 연동)** — Supabase `Lee-Yeon` 배우 프로필·화보를 `/lookbook`에 표시
+
+## Lookbook · Stardom Forge 연동
+
+스타덤(`stardom-forge-tool`)에 올린 프로필/화보가 팬사이트에도 보입니다.
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://qljnoknaplfjircybzgt.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # 스타덤과 동일 anon key
+STARDOM_ACTOR_SLUG=Lee-Yeon
+```
+
+- 메뉴: **Lookbook**
+- 읽기 전용 (스타덤에서 수정 → 팬사이트 반영)
+- 이미지 URL이 Google Drive면 썸네일 URL로 변환 시도
 
 ## 영상 하이브리드
 

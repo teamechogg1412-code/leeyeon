@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
+    "@supabase/supabase-js": "^2.110.8",
     "@tosspayments/tosspayments-sdk": "^2.7.1",
     "@vercel/blob": "^2.6.1",
     "bcryptjs": "^3.0.3",
