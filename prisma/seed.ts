@@ -47,6 +47,15 @@ async function ensureDemoMedia() {
     data: { emailVerified: new Date() },
   });
 
+  await prisma.order.updateMany({
+    where: {
+      type: "PRODUCT",
+      status: "PAID",
+      fulfillmentStatus: "NONE",
+    },
+    data: { fulfillmentStatus: "READY" },
+  });
+
   await prisma.stage.updateMany({
     data: { heroUrl: DEMO.hero },
   });

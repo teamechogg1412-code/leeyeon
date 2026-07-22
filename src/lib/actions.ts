@@ -968,3 +968,141 @@ export async function markAllNotificationsReadAction(): Promise<void> {
   revalidatePath("/notifications");
   revalidatePath("/");
 }
+
+export async function updateOrderFulfillmentAction(
+  formData: FormData
+): Promise<void> {
+  const { session, isOwner } = await getCurrentUserAccess();
+  if (!session?.user?.id || !isOwner) redirect("/login");
+
+  const orderId = String(formData.get("orderId") || "").trim();
+  const fulfillmentStatus = String(
+    formData.get("fulfillmentStatus") || ""
+  ).trim();
+  const trackingCarrier = String(formData.get("trackingCarrier") || "").trim();
+  const trackingNumber = String(formData.get("trackingNumber") || "").trim();
+  const adminNote = String(formData.get("adminNote") || "").trim();
+  const recipientName = String(formData.get("recipientName") || "").trim();
+  const recipientPhone = String(formData.get("recipientPhone") || "").trim();
+  const addressLine1 = String(formData.get("addressLine1") || "").trim();
+  const addressLine2 = String(formData.get("addressLine2") || "").trim();
+  const zipCode = String(formData.get("zipCode") || "").trim();
+
+  const allowed = ["NONE", "READY", "PREPARING", "SHIPPED", "DELIVERED"];
+  if (!orderId || !allowed.includes(fulfillmentStatus)) {
+    redirect("/admin/orders");
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) redirect("/admin/orders");
+
+  const prev = order.fulfillmentStatus;
+  const data: {
+    fulfillmentStatus: string;
+    trackingCarrier: string | null;
+    trackingNumber: string | null;
+    adminNote: string | null;
+    recipientName: string | null;
+    recipientPhone: string | null;
+    addressLine1: string | null;
+    addressLine2: string | null;
+    zipCode: string | null;
+    shippedAt?: Date | null;
+    deliveredAt?: Date | null;
+  } = {
+    fulfillmentStatus,
+    trackingCarrier: trackingCarrier || null,
+    trackingNumber: trackingNumber || null,
+    adminNote: adminNote || null,
+    recipientName: recipientName || null,
+    recipientPhone: recipientPhone || null,
+    addressLine1: addressLine1 || null,
+    addressLine2: addressLine2 || null,
+    zipCode: zipCode || null,
+  };
+
+  if (fulfillmentStatus === "SHIPPED" && prev !== "SHIPPED") {
+    data.shippedAt = new Date();
+  }
+  if (fulfillmentStatus === "DELIVERED") {
+    data.deliveredAt = new Date();
+    if (!order.shippedAt) data.shippedAt = order.shippedAt || new Date();
+  }
+
+  await prisma.order.update({ where: { id: orderId }, data });
+
+  if (
+    order.type === "PRODUCT" &&
+    fulfillmentStatus !== prev &&
+    ["PREPARING", "SHIPPED", "DELIVERED"].includes(fulfillmentStatus)
+  ) {
+    const labels: Record<string, string> = {
+      PREPARING: "상품을 준비하고 있습니다",
+      SHIPPED: trackingNumber
+        ? `배송이 시작되었습니다 (${trackingCarrier || "택배"} ${trackingNumber})`
+        : "배송이 시작되었습니다",
+      DELIVERED: "배송이 완료되었습니다",
+    };
+    await notifyUser({
+      userId: order.userId,
+      title: "주문 배송 업데이트",
+      body: labels[fulfillmentStatus] || "주문 상태가 변경되었습니다",
+      href: `/shop/orders/${order.id}`,
+      type: "ORDER",
+    });
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath(`/shop/orders/${orderId}`);
+  revalidatePath("/me");
+  revalidatePath("/notifications");
+  redirect(`/admin/orders/${orderId}`);
+}
+
+export async function updateOrderAddressAction(
+  formData: FormData
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const orderId = String(formData.get("orderId") || "").trim();
+  const recipientName = String(formData.get("recipientName") || "").trim();
+  const recipientPhone = String(formData.get("recipientPhone") || "").trim();
+  const addressLine1 = String(formData.get("addressLine1") || "").trim();
+  const addressLine2 = String(formData.get("addressLine2") || "").trim();
+  const zipCode = String(formData.get("zipCode") || "").trim();
+
+  if (!orderId || !recipientName || !recipientPhone || !addressLine1) {
+    redirect(`/shop/orders/${orderId}?error=address`);
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (
+    !order ||
+    order.userId !== session.user.id ||
+    order.type !== "PRODUCT" ||
+    order.status !== "PAID"
+  ) {
+    redirect("/me");
+  }
+
+  if (["SHIPPED", "DELIVERED"].includes(order.fulfillmentStatus)) {
+    redirect(`/shop/orders/${orderId}?error=locked`);
+  }
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      recipientName,
+      recipientPhone,
+      addressLine1,
+      addressLine2: addressLine2 || null,
+      zipCode: zipCode || null,
+    },
+  });
+
+  revalidatePath(`/shop/orders/${orderId}`);
+  revalidatePath("/me");
+  redirect(`/shop/orders/${orderId}?saved=1`);
+}

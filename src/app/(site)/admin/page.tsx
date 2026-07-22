@@ -36,9 +36,17 @@ export default async function AdminPage() {
 
   return (
     <div className="page-shell space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Admin</h1>
-        <p className="mt-1 text-sm text-muted">{stage.name} 운영 대시보드</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Admin</h1>
+          <p className="mt-1 text-sm text-muted">{stage.name} 운영 대시보드</p>
+        </div>
+        <Link
+          href="/admin/orders"
+          className="rounded-full border border-line px-4 py-2 text-sm hover:bg-black/5"
+        >
+          주문 · 배송 관리
+        </Link>
       </div>
 
       <AdminDashboard stats={stats} />

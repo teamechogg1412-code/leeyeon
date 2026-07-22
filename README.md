@@ -21,6 +21,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 15** — 검색·필터 고도화
 - **Phase 16** — 오너 대시보드 통계
 - **Phase 17** — 비밀번호 찾기 / 이메일 인증
+- **Phase 18** — 주문·배송 관리 UI
 
 ## Toss Payments
 
@@ -127,7 +128,13 @@ Open http://localhost:3000
 - Resend 설정 시 가입 후 이메일 인증 필요 (`RESEND_API_KEY`, `EMAIL_FROM`)
 - 미설정 시 가입 즉시 인증 처리 (데모 계정 그대로 사용)
 
+### Order & shipping
+
+- Admin → **주문 · 배송 관리** (`/admin/orders`)
+- 상품 주문: READY → PREPARING → SHIPPED → DELIVERED
+- 송장·주소 입력, 상태 변경 시 팬 알림
+- 팬은 `/shop/orders/[id]`에서 배송지 입력·배송 현황 확인
+
 ## Next phase ideas
 
-- 주문·배송 관리 UI
 - PWA (홈 화면 추가)

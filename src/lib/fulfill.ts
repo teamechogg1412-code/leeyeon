@@ -14,6 +14,7 @@ export async function fulfillPaidOrder(orderId: string, paymentKey?: string) {
     data: {
       status: "PAID",
       paymentKey: paymentKey || order.paymentKey,
+      fulfillmentStatus: order.type === "PRODUCT" ? "READY" : "NONE",
     },
   });
 

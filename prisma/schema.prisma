@@ -241,18 +241,32 @@ model Product {
 }
 
 model Order {
-  id          String   @id @default(cuid())
-  userId      String
-  type        String // MEMBERSHIP | PRODUCT
-  status      String   @default("PENDING") // PENDING | PAID | CANCELLED | REFUNDED
-  total       Int
-  orderCode   String   @unique
-  paymentKey  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String    @id @default(cuid())
+  userId            String
+  type              String // MEMBERSHIP | PRODUCT
+  status            String    @default("PENDING") // PENDING | PAID | CANCELLED | REFUNDED
+  fulfillmentStatus String    @default("NONE") // NONE | READY | PREPARING | SHIPPED | DELIVERED
+  total             Int
+  orderCode         String    @unique
+  paymentKey        String?
+  recipientName     String?
+  recipientPhone    String?
+  addressLine1      String?
+  addressLine2      String?
+  zipCode           String?
+  trackingCarrier   String?
+  trackingNumber    String?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  adminNote         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items OrderItem[]
+
+  @@index([status, fulfillmentStatus, createdAt])
+  @@index([type, createdAt])
 }
 
 model OrderItem {

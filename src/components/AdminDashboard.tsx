@@ -171,7 +171,12 @@ export function AdminDashboard({ stats }: { stats: OwnerDashboardStats }) {
       <section className="rounded-2xl border border-line bg-surface p-5">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold">최근 주문</h2>
-          <span className="text-[11px] text-muted">최근 8건</span>
+          <Link
+            href="/admin/orders"
+            className="text-[11px] text-muted hover:text-black"
+          >
+            전체 보기
+          </Link>
         </div>
         {recentOrders.length === 0 ? (
           <p className="text-sm text-muted">주문이 없습니다.</p>
@@ -180,7 +185,7 @@ export function AdminDashboard({ stats }: { stats: OwnerDashboardStats }) {
             {recentOrders.map((order) => (
               <Link
                 key={order.id}
-                href={`/shop/orders/${order.id}`}
+                href={`/admin/orders/${order.id}`}
                 className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm hover:bg-black/[0.015]"
               >
                 <div className="min-w-0">
