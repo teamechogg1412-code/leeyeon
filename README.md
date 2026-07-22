@@ -22,6 +22,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 16** — 오너 대시보드 통계
 - **Phase 17** — 비밀번호 찾기 / 이메일 인증
 - **Phase 18** — 주문·배송 관리 UI
+- **Phase 19** — PWA (manifest, offline shell, install banner)
 
 ## Toss Payments
 
@@ -135,6 +136,15 @@ Open http://localhost:3000
 - 송장·주소 입력, 상태 변경 시 팬 알림
 - 팬은 `/shop/orders/[id]`에서 배송지 입력·배송 현황 확인
 
+
+### PWA (Phase 19)
+
+- `src/app/manifest.ts` — standalone app, theme `#111111`, 192/512 icons
+- `public/sw.js` — shell cache `leeyeon-shell-v1`, offline fallback, Web Push handlers
+- `public/offline.html` — offline navigation fallback
+- Root layout registers `/sw.js` and shows install banner (`beforeinstallprompt` + iOS hint)
+- Dismiss install banner with localStorage key `pwa-install-dismissed`
+- Icons in `public/icons/` (192, 512, apple-touch)
+
 ## Next phase ideas
 
-- PWA (홈 화면 추가)
