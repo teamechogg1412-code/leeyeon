@@ -6,11 +6,15 @@ import { auth } from "@/lib/auth";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    reset?: string;
+    verified?: string;
+  }>;
 }) {
   const session = await auth();
   if (session) redirect("/");
-  await searchParams;
+  const { error, reset, verified } = await searchParams;
 
   return (
     <div className="page-shell flex min-h-[70vh] max-w-md flex-col justify-center">
@@ -18,6 +22,26 @@ export default async function LoginPage({
       <p className="mt-2 text-sm text-muted">
         데모 계정: fan@fanstage.app / password123
       </p>
+      {reset && (
+        <p className="mt-3 text-sm text-[#2f4a3c]">
+          비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.
+        </p>
+      )}
+      {verified && (
+        <p className="mt-3 text-sm text-[#2f4a3c]">
+          이메일 인증이 완료되었습니다. 로그인해 주세요.
+        </p>
+      )}
+      {error === "unverified" && (
+        <p className="mt-3 text-sm text-[#c81e1e]">
+          이메일 인증이 필요합니다. 메일함을 확인해 주세요.
+        </p>
+      )}
+      {(error === "CredentialsSignin" || error === "credentials") && (
+        <p className="mt-3 text-sm text-[#c81e1e]">
+          이메일 또는 비밀번호가 올바르지 않습니다.
+        </p>
+      )}
       <form action={loginAction} className="mt-8 space-y-4">
         <input
           name="email"
@@ -40,7 +64,12 @@ export default async function LoginPage({
           로그인
         </button>
       </form>
-      <p className="mt-6 text-center text-sm text-muted">
+      <p className="mt-4 text-center text-sm">
+        <Link href="/forgot-password" className="text-muted underline hover:text-black">
+          비밀번호를 잊으셨나요?
+        </Link>
+      </p>
+      <p className="mt-4 text-center text-sm text-muted">
         계정이 없나요?{" "}
         <Link href="/register" className="text-black underline">
           회원가입

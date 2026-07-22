@@ -3,15 +3,25 @@ import { redirect } from "next/navigation";
 import { registerAction } from "@/lib/actions";
 import { auth } from "@/lib/auth";
 
-export default async function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const session = await auth();
   if (session) redirect("/");
+  const { error } = await searchParams;
 
   return (
     <div className="page-shell flex min-h-[70vh] max-w-md flex-col justify-center">
       <h1 className="font-[family-name:var(--font-display)] text-3xl">
         Sign up
       </h1>
+      {error === "exists" && (
+        <p className="mt-3 text-sm text-[#c81e1e]">
+          이미 사용 중인 이메일 또는 닉네임입니다.
+        </p>
+      )}
       <form action={registerAction} className="mt-8 space-y-4">
         <input
           name="name"

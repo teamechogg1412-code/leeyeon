@@ -8,16 +8,17 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  nickname     String   @unique
-  role         String   @default("FAN") // FAN | OWNER | ADMIN
-  image        String?
-  bio          String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  nickname      String    @unique
+  role          String    @default("FAN") // FAN | OWNER | ADMIN
+  image         String?
+  bio           String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   posts            Post[]
   comments         Comment[]
@@ -30,6 +31,22 @@ model User {
   reactions        PostReaction[]
   contentReactions ContentReaction[]
   popMessages      PopMessage[]
+  authTokens       AuthToken[]
+}
+
+model AuthToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  type      String // PASSWORD_RESET | EMAIL_VERIFY
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([expiresAt])
 }
 
 model Stage {

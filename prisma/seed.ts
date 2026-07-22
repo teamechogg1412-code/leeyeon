@@ -42,6 +42,11 @@ const DEMO = {
 };
 
 async function ensureDemoMedia() {
+  await prisma.user.updateMany({
+    where: { emailVerified: null },
+    data: { emailVerified: new Date() },
+  });
+
   await prisma.stage.updateMany({
     data: { heroUrl: DEMO.hero },
   });
@@ -298,6 +303,7 @@ async function main() {
       name: "이연",
       nickname: "official_leeyeon",
       role: "OWNER",
+      emailVerified: new Date(),
     },
   });
 
@@ -308,6 +314,7 @@ async function main() {
       name: "Fan",
       nickname: "귤한입",
       role: "FAN",
+      emailVerified: new Date(),
     },
   });
 
@@ -318,6 +325,7 @@ async function main() {
       name: "Fan Two",
       nickname: "연이최고",
       role: "FAN",
+      emailVerified: new Date(),
     },
   });
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
+import { AuthError } from "next-auth";
 import { auth, signIn, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fulfillPaidOrder } from "@/lib/fulfill";
@@ -10,15 +11,39 @@ import { createOrderCode, isTossEnabled } from "@/lib/order";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { saveUploadedImage, saveUploadedVideo } from "@/lib/upload";
 import { notifyFans, notifyUser } from "@/lib/notify";
+import {
+  appBaseUrl,
+  consumeAuthToken,
+  createAuthToken,
+  isEmailConfigured,
+  sendEmail,
+} from "@/lib/email";
 
 export async function loginAction(formData: FormData): Promise<void> {
-  const email = String(formData.get("email") || "");
+  const email = String(formData.get("email") || "")
+    .toLowerCase()
+    .trim();
   const password = String(formData.get("password") || "");
-  await signIn("credentials", {
-    email,
-    password,
-    redirectTo: "/",
-  });
+
+  if (isEmailConfigured()) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user && !user.emailVerified) {
+      redirect("/login?error=unverified");
+    }
+  }
+
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: "/",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      redirect("/login?error=credentials");
+    }
+    throw error;
+  }
 }
 
 export async function registerAction(formData: FormData): Promise<void> {
@@ -37,19 +62,133 @@ export async function registerAction(formData: FormData): Promise<void> {
     where: { OR: [{ email }, { nickname }] },
   });
   if (exists) {
-    redirect("/register");
+    redirect("/register?error=exists");
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  await prisma.user.create({
-    data: { email, passwordHash, name, nickname, role: "FAN" },
+  const emailOn = isEmailConfigured();
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      passwordHash,
+      name,
+      nickname,
+      role: "FAN",
+      emailVerified: emailOn ? null : new Date(),
+    },
   });
+
+  if (emailOn) {
+    const token = await createAuthToken(user.id, "EMAIL_VERIFY", 48);
+    const link = `${appBaseUrl()}/verify-email?token=${token}`;
+    await sendEmail({
+      to: email,
+      subject: "LEE YEON — 이메일 인증",
+      text: `아래 링크에서 이메일을 인증해 주세요.\n\n${link}\n\n링크는 48시간 동안 유효합니다.`,
+      html: `<p>아래 버튼에서 이메일을 인증해 주세요.</p><p><a href="${link}">이메일 인증하기</a></p><p>링크는 48시간 동안 유효합니다.</p>`,
+    });
+    redirect(`/verify-pending?email=${encodeURIComponent(email)}`);
+  }
 
   await signIn("credentials", {
     email,
     password,
     redirectTo: "/",
   });
+}
+
+export async function forgotPasswordAction(formData: FormData): Promise<void> {
+  const email = String(formData.get("email") || "")
+    .toLowerCase()
+    .trim();
+  if (!email) redirect("/forgot-password");
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  // Always redirect to the same page to avoid email enumeration.
+  if (!user) {
+    redirect(`/forgot-password/sent?email=${encodeURIComponent(email)}`);
+  }
+
+  const token = await createAuthToken(user.id, "PASSWORD_RESET", 2);
+  const link = `${appBaseUrl()}/reset-password?token=${token}`;
+  const emailed = await sendEmail({
+    to: email,
+    subject: "LEE YEON — 비밀번호 재설정",
+    text: `비밀번호를 재설정하려면 아래 링크를 열어 주세요.\n\n${link}\n\n링크는 2시간 동안 유효합니다.`,
+    html: `<p>비밀번호를 재설정하려면 아래 링크를 열어 주세요.</p><p><a href="${link}">비밀번호 재설정</a></p><p>링크는 2시간 동안 유효합니다.</p>`,
+  });
+
+  if (!emailed.ok) {
+    redirect(
+      `/forgot-password/sent?email=${encodeURIComponent(email)}&demo=${token}`
+    );
+  }
+
+  redirect(`/forgot-password/sent?email=${encodeURIComponent(email)}`);
+}
+
+export async function resetPasswordAction(formData: FormData): Promise<void> {
+  const token = String(formData.get("token") || "").trim();
+  const password = String(formData.get("password") || "");
+  const confirm = String(formData.get("confirm") || "");
+
+  if (!token || password.length < 6 || password !== confirm) {
+    redirect(`/reset-password?token=${encodeURIComponent(token)}&error=invalid`);
+  }
+
+  const row = await consumeAuthToken(token, "PASSWORD_RESET");
+  if (!row) {
+    redirect("/reset-password?error=expired");
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await prisma.user.update({
+    where: { id: row.userId },
+    data: {
+      passwordHash,
+      emailVerified: row.user.emailVerified || new Date(),
+    },
+  });
+
+  redirect("/login?reset=1");
+}
+
+export async function verifyEmailAction(token: string): Promise<void> {
+  const row = await consumeAuthToken(token, "EMAIL_VERIFY");
+  if (!row) {
+    redirect("/verify-email?error=expired");
+  }
+
+  await prisma.user.update({
+    where: { id: row.userId },
+    data: { emailVerified: new Date() },
+  });
+
+  redirect("/login?verified=1");
+}
+
+export async function resendVerifyEmailAction(formData: FormData): Promise<void> {
+  const email = String(formData.get("email") || "")
+    .toLowerCase()
+    .trim();
+  if (!email || !isEmailConfigured()) {
+    redirect(`/verify-pending?email=${encodeURIComponent(email)}`);
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user && !user.emailVerified) {
+    const token = await createAuthToken(user.id, "EMAIL_VERIFY", 48);
+    const link = `${appBaseUrl()}/verify-email?token=${token}`;
+    await sendEmail({
+      to: email,
+      subject: "LEE YEON — 이메일 인증",
+      text: `아래 링크에서 이메일을 인증해 주세요.\n\n${link}`,
+      html: `<p><a href="${link}">이메일 인증하기</a></p>`,
+    });
+  }
+
+  redirect(`/verify-pending?email=${encodeURIComponent(email)}&resent=1`);
 }
 
 export async function logoutAction() {

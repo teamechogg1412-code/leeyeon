@@ -20,6 +20,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 14** — 멤버십 티어 배지 / 프로필 커스텀
 - **Phase 15** — 검색·필터 고도화
 - **Phase 16** — 오너 대시보드 통계
+- **Phase 17** — 비밀번호 찾기 / 이메일 인증
 
 ## Toss Payments
 
@@ -119,8 +120,14 @@ Open http://localhost:3000
 - 7일 가입/결제 막대 차트, 멤버십 티어별 현황
 - 인기 콘텐츠 · 최근 주문
 
+### Password reset & email verify
+
+- `/forgot-password` → 재설정 메일 (또는 데모 링크)
+- `/reset-password?token=…`
+- Resend 설정 시 가입 후 이메일 인증 필요 (`RESEND_API_KEY`, `EMAIL_FROM`)
+- 미설정 시 가입 즉시 인증 처리 (데모 계정 그대로 사용)
+
 ## Next phase ideas
 
-- 비밀번호 찾기 / 이메일 인증
 - 주문·배송 관리 UI
 - PWA (홈 화면 추가)
