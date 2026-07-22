@@ -9,6 +9,7 @@ import { fulfillPaidOrder } from "@/lib/fulfill";
 import { createOrderCode, isTossEnabled } from "@/lib/order";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { saveUploadedImage } from "@/lib/upload";
+import { notifyFans, notifyUser } from "@/lib/notify";
 
 export async function loginAction(formData: FormData): Promise<void> {
   const email = String(formData.get("email") || "");
@@ -136,6 +137,19 @@ export async function toggleReactionAction(formData: FormData): Promise<void> {
     await prisma.postReaction.create({
       data: { postId, userId: session.user.id, type },
     });
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true, title: true },
+    });
+    if (post && post.authorId !== session.user.id) {
+      await notifyUser({
+        userId: post.authorId,
+        title: "새 반응",
+        body: `"${post.title}"에 ${type} 반응이 달렸습니다.`,
+        href: `/community/post/${postId}`,
+        type: "REACTION",
+      });
+    }
   }
 
   revalidatePath(`/community/post/${postId}`);
@@ -158,13 +172,12 @@ export async function createCommentAction(formData: FormData): Promise<void> {
     select: { authorId: true, title: true },
   });
   if (post && post.authorId !== session.user.id) {
-    await prisma.notification.create({
-      data: {
-        userId: post.authorId,
-        title: "새 댓글",
-        body: `"${post.title}"에 댓글이 달렸습니다.`,
-        href: `/community/post/${postId}`,
-      },
+    await notifyUser({
+      userId: post.authorId,
+      title: "새 댓글",
+      body: `"${post.title}"에 댓글이 달렸습니다.`,
+      href: `/community/post/${postId}`,
+      type: "COMMENT",
     });
   }
 
@@ -339,7 +352,16 @@ export async function createStoryAction(formData: FormData): Promise<void> {
     },
   });
 
+  await notifyFans({
+    title: "새 From 소식",
+    body: body.slice(0, 80),
+    href: "/from",
+    type: "FROM",
+    excludeUserId: session.user.id,
+  });
+
   revalidatePath("/from");
+  revalidatePath("/notifications");
   redirect("/from");
 }
 
@@ -361,7 +383,7 @@ export async function createContentAction(formData: FormData): Promise<void> {
   );
 
   const stage = await getStage();
-  await prisma.content.create({
+  const content = await prisma.content.create({
     data: {
       stageId: stage.id,
       title,
@@ -373,8 +395,18 @@ export async function createContentAction(formData: FormData): Promise<void> {
     },
   });
 
+  await notifyFans({
+    title: membershipRequired ? "멤버십 콘텐츠" : "새 콘텐츠",
+    body: title,
+    href: `/contents/${content.id}`,
+    type: "CONTENT",
+    excludeUserId: session.user.id,
+    membersOnly: membershipRequired,
+  });
+
   revalidatePath("/contents");
   revalidatePath("/admin");
+  revalidatePath("/notifications");
   redirect("/contents");
 }
 
@@ -391,6 +423,25 @@ export async function createContentCommentAction(
   await prisma.contentComment.create({
     data: { contentId, authorId: session.user.id, body },
   });
+
+  const owners = await prisma.user.findMany({
+    where: { role: { in: ["OWNER", "ADMIN"] } },
+    select: { id: true },
+  });
+  const content = await prisma.content.findUnique({
+    where: { id: contentId },
+    select: { title: true },
+  });
+  for (const owner of owners) {
+    if (owner.id === session.user.id) continue;
+    await notifyUser({
+      userId: owner.id,
+      title: "콘텐츠 댓글",
+      body: `"${content?.title || "콘텐츠"}"에 댓글이 달렸습니다.`,
+      href: `/contents/${contentId}`,
+      type: "COMMENT",
+    });
+  }
 
   revalidatePath(`/contents/${contentId}`);
 }
@@ -602,8 +653,17 @@ export async function createScheduleAction(formData: FormData): Promise<void> {
     },
   });
 
+  await notifyFans({
+    title: "새 일정",
+    body: title,
+    href: "/schedule",
+    type: "SCHEDULE",
+    excludeUserId: session.user.id,
+  });
+
   revalidatePath("/schedule");
   revalidatePath("/admin");
+  revalidatePath("/notifications");
   redirect("/schedule");
 }
 
@@ -628,8 +688,18 @@ export async function createPopRoomAction(formData: FormData): Promise<void> {
     },
   });
 
+  await notifyFans({
+    title: live ? "POP LIVE 시작" : "새 POP",
+    body: title,
+    href: `/pop/${room.id}`,
+    type: "POP",
+    excludeUserId: session.user.id,
+    membersOnly: membershipRequired,
+  });
+
   revalidatePath("/pop");
   revalidatePath("/admin");
+  revalidatePath("/notifications");
   redirect(`/pop/${room.id}`);
 }
 
@@ -656,4 +726,30 @@ export async function sendPopMessageAction(formData: FormData): Promise<void> {
   });
 
   revalidatePath(`/pop/${roomId}`);
+}
+
+export async function markNotificationReadAction(
+  formData: FormData
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  const id = String(formData.get("id") || "");
+  if (!id) return;
+  await prisma.notification.updateMany({
+    where: { id, userId: session.user.id },
+    data: { read: true },
+  });
+  revalidatePath("/notifications");
+  revalidatePath("/");
+}
+
+export async function markAllNotificationsReadAction(): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  await prisma.notification.updateMany({
+    where: { userId: session.user.id, read: false },
+    data: { read: true },
+  });
+  revalidatePath("/notifications");
+  revalidatePath("/");
 }

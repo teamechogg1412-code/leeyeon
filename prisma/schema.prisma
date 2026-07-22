@@ -252,10 +252,13 @@ model Notification {
   title     String
   body      String
   href      String?
+  type      String   @default("SYSTEM") // COMMENT | REACTION | MEMBERSHIP | ORDER | FROM | CONTENT | SCHEDULE | POP | SYSTEM
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
 }
 
 model ScheduleEvent {

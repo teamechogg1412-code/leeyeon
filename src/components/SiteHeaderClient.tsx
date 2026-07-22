@@ -18,11 +18,13 @@ export function SiteHeaderClient({
   stageName,
   isLoggedIn,
   isOwner,
+  unreadCount = 0,
   logoutAction,
 }: {
   stageName: string;
   isLoggedIn: boolean;
   isOwner: boolean;
+  unreadCount?: number;
   logoutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
@@ -98,12 +100,17 @@ export function SiteHeaderClient({
                 href="/notifications"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
-                    : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
+                    ? "relative rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                    : "relative rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Notifications"
               >
                 <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#c81e1e] px-1 text-[9px] font-semibold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Link>
               <Link
                 href="/shop"

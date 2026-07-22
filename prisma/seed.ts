@@ -174,6 +174,47 @@ async function ensureDemoMedia() {
         },
       });
     }
+
+    const fans = await prisma.user.findMany({
+      where: { role: "FAN" },
+      select: { id: true },
+      take: 20,
+    });
+    for (const fan of fans) {
+      const existingNoti = await prisma.notification.count({
+        where: { userId: fan.id },
+      });
+      if (existingNoti === 0) {
+        await prisma.notification.createMany({
+          data: [
+            {
+              userId: fan.id,
+              type: "FROM",
+              title: "새 From 소식",
+              body: "안녕하세요, 이연입니다. 공식 커뮤니티에서 반갑게 만나요.",
+              href: "/from",
+              read: false,
+            },
+            {
+              userId: fan.id,
+              type: "SCHEDULE",
+              title: "새 일정",
+              body: "팬미팅 티켓 오픈",
+              href: "/schedule",
+              read: false,
+            },
+            {
+              userId: fan.id,
+              type: "POP",
+              title: "POP LIVE 시작",
+              body: "오늘도 수고했어요 🌙",
+              href: "/pop",
+              read: false,
+            },
+          ],
+        });
+      }
+    }
   }
 
   console.log("Demo media URLs ensured.");

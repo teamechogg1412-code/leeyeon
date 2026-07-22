@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { notifyUser } from "@/lib/notify";
 
 export async function fulfillPaidOrder(orderId: string, paymentKey?: string) {
   const order = await prisma.order.findUnique({
@@ -37,13 +38,12 @@ export async function fulfillPaidOrder(orderId: string, paymentKey?: string) {
             endsAt,
           },
         });
-        await prisma.notification.create({
-          data: {
-            userId: order.userId,
-            title: "멤버십 가입 완료",
-            body: `${plan.name} 멤버십이 활성화되었습니다.`,
-            href: "/shop/membership",
-          },
+        await notifyUser({
+          userId: order.userId,
+          title: "멤버십 가입 완료",
+          body: `${plan.name} 멤버십이 활성화되었습니다.`,
+          href: "/shop/membership",
+          type: "MEMBERSHIP",
         });
       }
     }
@@ -58,13 +58,12 @@ export async function fulfillPaidOrder(orderId: string, paymentKey?: string) {
         });
       }
     }
-    await prisma.notification.create({
-      data: {
-        userId: order.userId,
-        title: "주문 완료",
-        body: `${order.items[0]?.title || "상품"} 주문이 완료되었습니다.`,
-        href: `/shop/orders/${order.id}`,
-      },
+    await notifyUser({
+      userId: order.userId,
+      title: "주문 완료",
+      body: `${order.items[0]?.title || "상품"} 주문이 완료되었습니다.`,
+      href: `/shop/orders/${order.id}`,
+      type: "ORDER",
     });
   }
 
