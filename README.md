@@ -8,6 +8,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 2** — 이미지 업로드, 검색·페이지네이션, 글/댓글 삭제, Admin 게시판·멤버십 관리
 - **Phase 3** — Shop 탭/상품상세, From 피드, Home 고도화
 - **Phase 4** — Contents 카테고리 캐러셀, Toss 결제 위젯(키 있으면) / 없으면 데모 결제
+- **Phase 5** — Vercel Blob 업로드, Contents/Shop/From 데모 썸네일
 
 ## Toss Payments
 
@@ -53,16 +54,17 @@ Open http://localhost:3000
 
 1. GitHub repo를 [Vercel Import](https://vercel.com/new)로 연결
 2. **Storage**에서 Neon Postgres 추가 (Marketplace → Neon) — `DATABASE_URL` 자동 주입
-3. Environment Variables 추가:
+3. **Storage**에서 **Blob** 추가 (Public) — `BLOB_READ_WRITE_TOKEN` 자동 주입
+4. Environment Variables 추가:
    - `AUTH_SECRET` (랜덤 긴 문자열)
-4. Deploy — build에서 `prisma migrate deploy` + seed + `next build` 실행
+5. Deploy — build에서 `prisma db push` + seed + `next build` 실행
 
-로컬 파일 업로드(`public/uploads`)는 Vercel에서 영구 저장되지 않습니다.  
-프로덕션에서는 S3 / R2 / Vercel Blob로 바꾸면 됩니다.
+`BLOB_READ_WRITE_TOKEN`이 없으면 업로드는 로컬 디스크에만 저장되어 Vercel에서 사라집니다.  
+로컬 파일 업로드(`public/uploads`)는 개발용 폴백입니다.
 
 ## Next phase ideas
 
-- 실제 PG 결제 (Toss/Stripe)
-- 클라우드 이미지 스토리지
+- 스케줄 / 캘린더
+- POP / 라이브 채팅
 - 멀티 테넌트 (여러 아티스트)
-- 라이브 / POP 채팅
+- 알림 고도화

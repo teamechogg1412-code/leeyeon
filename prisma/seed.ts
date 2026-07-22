@@ -3,11 +3,75 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-async function main() {
-  // Keep brand hero wired even when seed data already exists (uploads/ is gitignored).
+const DEMO = {
+  hero: "/brand/leeyeon-hero.jpg",
+  stories: [
+    {
+      body: "안녕하세요, 이연입니다. 공식 커뮤니티에서 반갑게 만나요.",
+      imageUrl: "/brand/story-morning.jpg",
+    },
+    {
+      body: "오늘도 촬영 잘 마쳤어요. 응원 감사해요!",
+      imageUrl: "/brand/story-night.jpg",
+    },
+  ],
+  contents: [
+    {
+      title: "'사랑의 맘보' 퍼포먼스 클립💌",
+      coverUrl: "/brand/content-mambo.jpg",
+    },
+    {
+      title: "첫 인사 영상",
+      coverUrl: "/brand/content-hello.jpg",
+    },
+    {
+      title: "멤버십 전용 비하인드",
+      coverUrl: "/brand/content-behind.jpg",
+    },
+  ],
+  products: [
+    {
+      name: "공식 포토카드 세트",
+      imageUrl: "/brand/product-photocard.jpg",
+    },
+    {
+      name: "응원봉 키링",
+      imageUrl: "/brand/product-keyring.jpg",
+    },
+  ],
+};
+
+async function ensureDemoMedia() {
   await prisma.stage.updateMany({
-    data: { heroUrl: "/brand/leeyeon-hero.jpg" },
+    data: { heroUrl: DEMO.hero },
   });
+
+  for (const story of DEMO.stories) {
+    await prisma.story.updateMany({
+      where: { body: story.body },
+      data: { imageUrl: story.imageUrl },
+    });
+  }
+
+  for (const content of DEMO.contents) {
+    await prisma.content.updateMany({
+      where: { title: content.title },
+      data: { coverUrl: content.coverUrl },
+    });
+  }
+
+  for (const product of DEMO.products) {
+    await prisma.product.updateMany({
+      where: { name: product.name },
+      data: { imageUrl: product.imageUrl },
+    });
+  }
+
+  console.log("Demo media URLs ensured.");
+}
+
+async function main() {
+  await ensureDemoMedia();
 
   const existing = await prisma.user.count();
   if (existing > 0) {
@@ -52,7 +116,7 @@ async function main() {
       name: "LEE YEON",
       slug: "leeyeon",
       tagline: "Official Fan Community",
-      heroUrl: "/brand/leeyeon-hero.jpg",
+      heroUrl: DEMO.hero,
       description:
         "배우 이연 공식 팬 커뮤니티 · 콘텐츠 · 멤버십 · 샵을 한곳에서.",
     },
@@ -141,43 +205,40 @@ async function main() {
   });
 
   await prisma.story.createMany({
-    data: [
-      {
-        stageId: stage.id,
-        authorId: owner.id,
-        body: "안녕하세요, 이연입니다. 공식 커뮤니티에서 반갑게 만나요.",
-      },
-      {
-        stageId: stage.id,
-        authorId: owner.id,
-        body: "오늘도 촬영 잘 마쳤어요. 응원 감사해요!",
-      },
-    ],
+    data: DEMO.stories.map((story) => ({
+      stageId: stage.id,
+      authorId: owner.id,
+      body: story.body,
+      imageUrl: story.imageUrl,
+    })),
   });
 
   await prisma.content.createMany({
     data: [
       {
         stageId: stage.id,
-        title: "'사랑의 맘보' 퍼포먼스 클립💌",
+        title: DEMO.contents[0].title,
         body: "이연의 퍼포먼스 클립을 만나보세요.\n#퍼포먼스 #공식콘텐츠",
         category: "사랑의 맘보",
+        coverUrl: DEMO.contents[0].coverUrl,
         videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         membershipRequired: false,
       },
       {
         stageId: stage.id,
-        title: "첫 인사 영상",
+        title: DEMO.contents[1].title,
         body: "공식 플랫폼 오픈을 맞아 이연이 전하는 첫 인사입니다.",
         category: "OFFICIAL",
+        coverUrl: DEMO.contents[1].coverUrl,
         videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         membershipRequired: false,
       },
       {
         stageId: stage.id,
-        title: "멤버십 전용 비하인드",
+        title: DEMO.contents[2].title,
         body: "촬영장 비하인드 컷과 메시지를 멤버십 회원에게만 공개합니다.",
         category: "OFFICIAL",
+        coverUrl: DEMO.contents[2].coverUrl,
         membershipRequired: true,
       },
     ],
@@ -196,22 +257,17 @@ async function main() {
   });
 
   await prisma.product.createMany({
-    data: [
-      {
-        stageId: stage.id,
-        name: "공식 포토카드 세트",
-        description: "시즌 한정 포토카드 8종 세트",
-        price: 18000,
-        stock: 50,
-      },
-      {
-        stageId: stage.id,
-        name: "응원봉 키링",
-        description: "미니 응원봉 키링",
-        price: 12000,
-        stock: 100,
-      },
-    ],
+    data: DEMO.products.map((product) => ({
+      stageId: stage.id,
+      name: product.name,
+      description:
+        product.name === "공식 포토카드 세트"
+          ? "시즌 한정 포토카드 8종 세트"
+          : "미니 응원봉 키링",
+      price: product.name === "공식 포토카드 세트" ? 18000 : 12000,
+      stock: product.name === "공식 포토카드 세트" ? 50 : 100,
+      imageUrl: product.imageUrl,
+    })),
   });
 
   const endsAt = new Date();
