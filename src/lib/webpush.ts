@@ -3,9 +3,18 @@ import { isPushConfigured } from "@/lib/pushConfig";
 
 export { isPushConfigured };
 
-function configureWebPush(
-  webpush: typeof import("web-push").default
-) {
+type WebPush = {
+  setVapidDetails: (subject: string, publicKey: string, privateKey: string) => void;
+  sendNotification: (
+    subscription: {
+      endpoint: string;
+      keys: { p256dh: string; auth: string };
+    },
+    payload: string
+  ) => Promise<unknown>;
+};
+
+function configureWebPush(webpush: WebPush) {
   if (!isPushConfigured()) return false;
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT || "mailto:owner@fanstage.app",
@@ -22,7 +31,7 @@ export async function sendPushToUsers(
   if (userIds.length === 0) return;
   if (!isPushConfigured()) return;
 
-  const webpush = (await import("web-push")).default;
+  const webpush = (await import("web-push")).default as unknown as WebPush;
   if (!configureWebPush(webpush)) return;
 
   let subscriptions: Awaited<
@@ -60,7 +69,9 @@ export async function sendPushToUsers(
             ? Number((error as { statusCode?: number }).statusCode)
             : 0;
         if (status === 404 || status === 410) {
-          await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
+          await prisma.pushSubscription
+            .delete({ where: { id: sub.id } })
+            .catch(() => {});
         }
       }
     })
