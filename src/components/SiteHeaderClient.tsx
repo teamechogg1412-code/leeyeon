@@ -105,7 +105,7 @@ export function SiteHeaderClient({
                 href="/schedule"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                    ? "rounded-full p-2 text-white hover:bg-white/10"
                     : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Schedule"
@@ -133,7 +133,7 @@ export function SiteHeaderClient({
                   href="/shop"
                   className={
                     isHome
-                      ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                      ? "rounded-full p-2 text-white hover:bg-white/10"
                       : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                   }
                   aria-label="Shop"
@@ -145,7 +145,7 @@ export function SiteHeaderClient({
                 href="/me"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                    ? "rounded-full p-2 text-white hover:bg-white/10"
                     : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Profile"
@@ -183,7 +183,7 @@ export function SiteHeaderClient({
                 href="/schedule"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                    ? "rounded-full p-2 text-white hover:bg-white/10"
                     : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Schedule"
@@ -195,7 +195,7 @@ export function SiteHeaderClient({
                   href="/shop"
                   className={
                     isHome
-                      ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                      ? "rounded-full p-2 text-white hover:bg-white/10"
                       : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                   }
                   aria-label="Shop"
@@ -221,7 +221,7 @@ export function SiteHeaderClient({
       <nav
         className={
           isHome
-            ? "flex gap-5 overflow-x-auto border-t border-white/10 px-4 py-2 text-xs text-white/65 md:hidden"
+            ? "flex gap-5 overflow-x-auto border-t border-white/10 px-4 py-2 text-xs text-white md:hidden"
             : "flex gap-5 overflow-x-auto border-t border-black/5 px-4 py-2 text-xs text-black/55 md:hidden"
         }
       >
