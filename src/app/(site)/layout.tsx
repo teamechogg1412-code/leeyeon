@@ -1,6 +1,8 @@
 import { SiteHeader } from "@/components/SiteHeader";
 import { getStage } from "@/lib/stage";
 
+export const dynamic = "force-dynamic";
+
 export default async function SiteLayout({
   children,
 }: {

@@ -35,6 +35,10 @@ export function SiteHeaderClient({
     ? navAll
     : navAll.filter((item) => item.href !== "/shop");
 
+  const homeIconStyle = isHome
+    ? ({ color: "#ffffff" } as const)
+    : undefined;
+
   return (
     <header
       className={
@@ -46,9 +50,10 @@ export function SiteHeaderClient({
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link
           href="/"
+          style={isHome ? { color: "#ffffff" } : undefined}
           className={
             isHome
-              ? "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em] !text-white"
+              ? "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em]"
               : "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em]"
           }
         >
@@ -56,9 +61,10 @@ export function SiteHeaderClient({
         </Link>
 
         <nav
+          style={isHome ? { color: "#ffffff" } : undefined}
           className={
             isHome
-              ? "hidden items-center gap-7 text-[13px] tracking-wide text-white md:flex"
+              ? "hidden items-center gap-7 text-[13px] tracking-wide md:flex"
               : "hidden items-center gap-7 text-[13px] tracking-wide text-black/55 md:flex"
           }
         >
@@ -71,11 +77,12 @@ export function SiteHeaderClient({
               <Link
                 key={item.href}
                 href={item.href}
+                style={isHome ? { color: "#ffffff" } : undefined}
                 className={
                   isHome
                     ? isActive
-                      ? "font-semibold !text-white"
-                      : "!text-white transition hover:opacity-80"
+                      ? "font-semibold"
+                      : "transition hover:opacity-80"
                     : isActive
                       ? "font-semibold text-black"
                       : "transition hover:text-black"
@@ -88,18 +95,16 @@ export function SiteHeaderClient({
         </nav>
 
         <div
-          className={
-            isHome
-              ? "flex items-center gap-1.5 text-white sm:gap-2"
-              : "flex items-center gap-1.5 text-black/60 sm:gap-2"
-          }
+          style={homeIconStyle}
+          className="flex items-center gap-1.5 sm:gap-2"
         >
           <Link
             href="/search"
+            style={homeIconStyle}
             className={
               isHome
-                ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
-                : "rounded-full p-2 hover:bg-black/5 hover:text-black"
+                ? "rounded-full p-2 hover:bg-white/10"
+                : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
             }
             aria-label="Search"
           >
@@ -109,10 +114,11 @@ export function SiteHeaderClient({
             <>
               <Link
                 href="/schedule"
+                style={homeIconStyle}
                 className={
                   isHome
-                    ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
-                    : "rounded-full p-2 hover:bg-black/5 hover:text-black"
+                    ? "rounded-full p-2 hover:bg-white/10"
+                    : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Schedule"
               >
@@ -120,10 +126,11 @@ export function SiteHeaderClient({
               </Link>
               <Link
                 href="/notifications"
+                style={homeIconStyle}
                 className={
                   isHome
-                    ? "relative rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
-                    : "relative rounded-full p-2 hover:bg-black/5 hover:text-black"
+                    ? "relative rounded-full p-2 hover:bg-white/10"
+                    : "relative rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Notifications"
               >
@@ -137,10 +144,11 @@ export function SiteHeaderClient({
               {shopEnabled && (
                 <Link
                   href="/shop"
+                  style={homeIconStyle}
                   className={
                     isHome
-                      ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
-                      : "rounded-full p-2 hover:bg-black/5 hover:text-black"
+                      ? "rounded-full p-2 hover:bg-white/10"
+                      : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                   }
                   aria-label="Shop"
                 >
@@ -149,10 +157,11 @@ export function SiteHeaderClient({
               )}
               <Link
                 href="/me"
+                style={homeIconStyle}
                 className={
                   isHome
-                    ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
-                    : "rounded-full p-2 hover:bg-black/5 hover:text-black"
+                    ? "rounded-full p-2 hover:bg-white/10"
+                    : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Profile"
               >
@@ -161,9 +170,10 @@ export function SiteHeaderClient({
               {isOwner && (
                 <Link
                   href="/admin"
+                  style={isHome ? { color: "#ffffff" } : undefined}
                   className={
                     isHome
-                      ? "ml-1 hidden rounded-full border border-white/25 px-3 py-1.5 text-xs font-medium !text-white sm:inline-flex"
+                      ? "ml-1 hidden rounded-full border border-white/25 px-3 py-1.5 text-xs font-medium sm:inline-flex"
                       : "ml-1 hidden rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium sm:inline-flex"
                   }
                 >
@@ -173,9 +183,10 @@ export function SiteHeaderClient({
               <form action={logoutAction}>
                 <button
                   type="submit"
+                  style={isHome ? { color: "#ffffff" } : undefined}
                   className={
                     isHome
-                      ? "rounded-full px-3 py-1.5 text-xs !text-white hover:opacity-80"
+                      ? "rounded-full px-3 py-1.5 text-xs hover:opacity-80"
                       : "rounded-full px-3 py-1.5 text-xs text-black/50 hover:text-black"
                   }
                 >
@@ -187,10 +198,11 @@ export function SiteHeaderClient({
             <>
               <Link
                 href="/schedule"
+                style={homeIconStyle}
                 className={
                   isHome
-                    ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
-                    : "rounded-full p-2 hover:bg-black/5 hover:text-black"
+                    ? "rounded-full p-2 hover:bg-white/10"
+                    : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Schedule"
               >
@@ -199,10 +211,11 @@ export function SiteHeaderClient({
               {shopEnabled && (
                 <Link
                   href="/shop"
+                  style={homeIconStyle}
                   className={
                     isHome
-                      ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
-                      : "rounded-full p-2 hover:bg-black/5 hover:text-black"
+                      ? "rounded-full p-2 hover:bg-white/10"
+                      : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                   }
                   aria-label="Shop"
                 >
@@ -225,14 +238,20 @@ export function SiteHeaderClient({
       </div>
 
       <nav
+        style={isHome ? { color: "#ffffff" } : undefined}
         className={
           isHome
-            ? "flex gap-5 overflow-x-auto border-t border-white/10 px-4 py-2 text-xs !text-white md:hidden"
+            ? "flex gap-5 overflow-x-auto border-t border-white/10 px-4 py-2 text-xs md:hidden"
             : "flex gap-5 overflow-x-auto border-t border-black/5 px-4 py-2 text-xs text-black/55 md:hidden"
         }
       >
         {nav.map((item) => (
-          <Link key={item.href} href={item.href} className="whitespace-nowrap">
+          <Link
+            key={item.href}
+            href={item.href}
+            style={isHome ? { color: "#ffffff" } : undefined}
+            className="whitespace-nowrap"
+          >
             {item.label}
           </Link>
         ))}

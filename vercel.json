@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "prisma db push && prisma db seed && next build",
+  "buildCommand": "prisma db push && prisma db seed; next build",
   "framework": "nextjs",
   "crons": [
     {
