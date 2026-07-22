@@ -48,7 +48,7 @@ export function SiteHeaderClient({
           href="/"
           className={
             isHome
-              ? "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em] text-white"
+              ? "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em] !text-white"
               : "font-[family-name:var(--font-display)] text-lg font-semibold tracking-[0.04em]"
           }
         >
@@ -74,8 +74,8 @@ export function SiteHeaderClient({
                 className={
                   isHome
                     ? isActive
-                      ? "font-semibold text-white"
-                      : "text-white transition hover:opacity-80"
+                      ? "font-semibold !text-white"
+                      : "!text-white transition hover:opacity-80"
                     : isActive
                       ? "font-semibold text-black"
                       : "transition hover:text-black"
@@ -98,7 +98,7 @@ export function SiteHeaderClient({
             href="/search"
             className={
               isHome
-                ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
+                ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                 : "rounded-full p-2 hover:bg-black/5 hover:text-black"
             }
             aria-label="Search"
@@ -111,7 +111,7 @@ export function SiteHeaderClient({
                 href="/schedule"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
+                    ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                     : "rounded-full p-2 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Schedule"
@@ -122,7 +122,7 @@ export function SiteHeaderClient({
                 href="/notifications"
                 className={
                   isHome
-                    ? "relative rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
+                    ? "relative rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                     : "relative rounded-full p-2 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Notifications"
@@ -139,7 +139,7 @@ export function SiteHeaderClient({
                   href="/shop"
                   className={
                     isHome
-                      ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
+                      ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                       : "rounded-full p-2 hover:bg-black/5 hover:text-black"
                   }
                   aria-label="Shop"
@@ -151,7 +151,7 @@ export function SiteHeaderClient({
                 href="/me"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
+                    ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                     : "rounded-full p-2 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Profile"
@@ -163,7 +163,7 @@ export function SiteHeaderClient({
                   href="/admin"
                   className={
                     isHome
-                      ? "ml-1 hidden rounded-full border border-white/25 px-3 py-1.5 text-xs font-medium text-white sm:inline-flex"
+                      ? "ml-1 hidden rounded-full border border-white/25 px-3 py-1.5 text-xs font-medium !text-white sm:inline-flex"
                       : "ml-1 hidden rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium sm:inline-flex"
                   }
                 >
@@ -175,7 +175,7 @@ export function SiteHeaderClient({
                   type="submit"
                   className={
                     isHome
-                      ? "rounded-full px-3 py-1.5 text-xs text-white hover:opacity-80"
+                      ? "rounded-full px-3 py-1.5 text-xs !text-white hover:opacity-80"
                       : "rounded-full px-3 py-1.5 text-xs text-black/50 hover:text-black"
                   }
                 >
@@ -189,7 +189,7 @@ export function SiteHeaderClient({
                 href="/schedule"
                 className={
                   isHome
-                    ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
+                    ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                     : "rounded-full p-2 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Schedule"
@@ -201,7 +201,7 @@ export function SiteHeaderClient({
                   href="/shop"
                   className={
                     isHome
-                      ? "rounded-full p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
+                      ? "rounded-full p-2 !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] hover:bg-white/10"
                       : "rounded-full p-2 hover:bg-black/5 hover:text-black"
                   }
                   aria-label="Shop"
@@ -227,7 +227,7 @@ export function SiteHeaderClient({
       <nav
         className={
           isHome
-            ? "flex gap-5 overflow-x-auto border-t border-white/10 px-4 py-2 text-xs text-white md:hidden"
+            ? "flex gap-5 overflow-x-auto border-t border-white/10 px-4 py-2 text-xs !text-white md:hidden"
             : "flex gap-5 overflow-x-auto border-t border-black/5 px-4 py-2 text-xs text-black/55 md:hidden"
         }
       >
