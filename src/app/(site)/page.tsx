@@ -5,9 +5,15 @@ import { avatarColor, avatarInitial } from "@/lib/avatar";
 import { getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
 
+const DEFAULT_HERO = "/brand/leeyeon-hero.jpg";
+
 export default async function HomePage() {
   const session = await auth();
   const stage = await getStage();
+  const heroSrc =
+    stage.heroUrl && !stage.heroUrl.startsWith("/uploads/")
+      ? stage.heroUrl
+      : DEFAULT_HERO;
   const [stories, contents, posts, products] = await Promise.all([
     prisma.story.findMany({
       where: { stageId: stage.id },
@@ -51,9 +57,7 @@ export default async function HomePage() {
         <div
           className="absolute inset-0 scale-[1.02]"
           style={{
-            backgroundImage: stage.heroUrl
-              ? `url(${stage.heroUrl})`
-              : "radial-gradient(ellipse at 30% 20%, #3a4248 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, #2a2220 0%, #121416 55%)",
+            backgroundImage: `linear-gradient(to top, rgba(10,10,12,.55), rgba(10,10,12,.12) 42%, rgba(10,10,12,.28)), url(${heroSrc})`,
             backgroundSize: "cover",
             backgroundPosition: "center 18%",
           }}
