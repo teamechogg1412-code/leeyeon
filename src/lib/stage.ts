@@ -1,35 +1,17 @@
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
-export const STAGE_COOKIE = "fanstage_slug";
-
-export async function listStages() {
-  return prisma.stage.findMany({
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      tagline: true,
-      heroUrl: true,
-    },
-  });
-}
-
 export async function getStage() {
-  const jar = await cookies();
-  const slug = jar.get(STAGE_COOKIE)?.value;
-  if (slug) {
-    const found = await prisma.stage.findUnique({ where: { slug } });
-    if (found) return found;
-  }
-
   const stage = await prisma.stage.findFirst({
+    where: { slug: "leeyeon" },
+  });
+  if (stage) return stage;
+
+  const fallback = await prisma.stage.findFirst({
     orderBy: { createdAt: "asc" },
   });
-  if (!stage) throw new Error("Stage not found. Run seed.");
-  return stage;
+  if (!fallback) throw new Error("Stage not found. Run seed.");
+  return fallback;
 }
 
 export async function hasActiveMembership(

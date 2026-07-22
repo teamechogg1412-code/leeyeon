@@ -7,7 +7,7 @@ import { auth, signIn, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fulfillPaidOrder } from "@/lib/fulfill";
 import { createOrderCode, isTossEnabled } from "@/lib/order";
-import { getCurrentUserAccess, getStage, STAGE_COOKIE } from "@/lib/stage";
+import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { saveUploadedImage } from "@/lib/upload";
 import { notifyFans, notifyUser } from "@/lib/notify";
 
@@ -752,97 +752,4 @@ export async function markAllNotificationsReadAction(): Promise<void> {
   });
   revalidatePath("/notifications");
   revalidatePath("/");
-}
-
-export async function switchStageAction(formData: FormData): Promise<void> {
-  const slug = String(formData.get("slug") || "")
-    .trim()
-    .toLowerCase();
-  if (!slug) return;
-
-  const stage = await prisma.stage.findUnique({ where: { slug } });
-  if (!stage) return;
-
-  const { cookies } = await import("next/headers");
-  const jar = await cookies();
-  jar.set(STAGE_COOKIE, stage.slug, {
-    path: "/",
-    httpOnly: false,
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 365,
-  });
-
-  revalidatePath("/", "layout");
-  redirect("/");
-}
-
-export async function createStageAction(formData: FormData): Promise<void> {
-  const { session, isOwner } = await getCurrentUserAccess();
-  if (!session?.user?.id || !isOwner) redirect("/login");
-
-  const name = String(formData.get("name") || "").trim();
-  const slugRaw = String(formData.get("slug") || "").trim().toLowerCase();
-  const tagline = String(formData.get("tagline") || "").trim() || null;
-  const description = String(formData.get("description") || "").trim() || null;
-  const slug = slugRaw
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-  if (!name || !slug) redirect("/admin");
-
-  const exists = await prisma.stage.findUnique({ where: { slug } });
-  if (exists) redirect("/admin");
-
-  const stage = await prisma.stage.create({
-    data: {
-      name,
-      slug,
-      tagline: tagline || "Official Fan Community",
-      description:
-        description || `${name} 공식 팬 커뮤니티 · 콘텐츠 · 멤버십 · 샵`,
-      heroUrl: "/brand/leeyeon-hero.jpg",
-    },
-  });
-
-  await prisma.board.createMany({
-    data: [
-      {
-        stageId: stage.id,
-        name: "FREE TALK",
-        slug: "free-talk",
-        icon: "list",
-        sortOrder: 1,
-      },
-      {
-        stageId: stage.id,
-        name: "To. Artist",
-        slug: "to-artist",
-        icon: "list",
-        sortOrder: 2,
-      },
-    ],
-  });
-
-  await prisma.membershipPlan.create({
-    data: {
-      stageId: stage.id,
-      name: "Official Membership",
-      description: "디지털 회원카드 · 전용 콘텐츠",
-      price: 39000,
-      durationDays: 365,
-      benefits: "디지털 회원카드|멤버십 전용 콘텐츠|이벤트 우선 안내",
-    },
-  });
-
-  const { cookies } = await import("next/headers");
-  const jar = await cookies();
-  jar.set(STAGE_COOKIE, stage.slug, {
-    path: "/",
-    httpOnly: false,
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 365,
-  });
-
-  revalidatePath("/", "layout");
-  redirect("/");
 }
