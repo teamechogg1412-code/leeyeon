@@ -19,6 +19,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 13** — 브라우저 푸시 알림 (Web Push + VAPID)
 - **Phase 14** — 멤버십 티어 배지 / 프로필 커스텀
 - **Phase 15** — 검색·필터 고도화
+- **Phase 16** — 오너 대시보드 통계
 
 ## Toss Payments
 
@@ -112,9 +113,14 @@ Open http://localhost:3000
 - Community: 검색 + 최신·댓글·조회순
 - Shop / From / Schedule: 검색 (+ Schedule 카테고리 필터)
 
+### Owner dashboard
+
+- `/admin` — 팬·멤버·매출·주문 요약
+- 7일 가입/결제 막대 차트, 멤버십 티어별 현황
+- 인기 콘텐츠 · 최근 주문
+
 ## Next phase ideas
 
-- 오너 대시보드 통계
 - 비밀번호 찾기 / 이메일 인증
 - 주문·배송 관리 UI
 - PWA (홈 화면 추가)

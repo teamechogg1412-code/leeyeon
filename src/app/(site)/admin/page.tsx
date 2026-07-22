@@ -11,31 +11,28 @@ import {
   updateStageAction,
 } from "@/lib/actions";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
+import { getOwnerDashboardStats } from "@/lib/adminStats";
 import { prisma } from "@/lib/prisma";
 import { ImageUploadField } from "@/components/ImageUploadField";
 import { VideoUploadField } from "@/components/VideoUploadField";
+import { AdminDashboard } from "@/components/AdminDashboard";
 
 export default async function AdminPage() {
   const { isOwner } = await getCurrentUserAccess();
   if (!isOwner) redirect("/login");
 
   const stage = await getStage();
-  const [users, posts, orders, contents, products, boards, plans] =
-    await Promise.all([
-      prisma.user.count(),
-      prisma.post.count({ where: { board: { stageId: stage.id } } }),
-      prisma.order.count(),
-      prisma.content.count({ where: { stageId: stage.id } }),
-      prisma.product.count({ where: { stageId: stage.id } }),
-      prisma.board.findMany({
-        where: { stageId: stage.id },
-        orderBy: { sortOrder: "asc" },
-      }),
-      prisma.membershipPlan.findMany({
-        where: { stageId: stage.id },
-        orderBy: { createdAt: "desc" },
-      }),
-    ]);
+  const [stats, boards, plans] = await Promise.all([
+    getOwnerDashboardStats(stage.id),
+    prisma.board.findMany({
+      where: { stageId: stage.id },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.membershipPlan.findMany({
+      where: { stageId: stage.id },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    }),
+  ]);
 
   return (
     <div className="page-shell space-y-10">
@@ -44,23 +41,7 @@ export default async function AdminPage() {
         <p className="mt-1 text-sm text-muted">{stage.name} 운영 대시보드</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {[
-          ["Fans", users],
-          ["Posts", posts],
-          ["Orders", orders],
-          ["Contents", contents],
-          ["Products", products],
-        ].map(([label, value]) => (
-          <div
-            key={label as string}
-            className="rounded-2xl border border-line bg-surface p-4"
-          >
-            <p className="text-xs text-muted">{label}</p>
-            <p className="mt-1 text-2xl font-semibold">{value}</p>
-          </div>
-        ))}
-      </div>
+      <AdminDashboard stats={stats} />
 
       <form
         action={updateStageAction}
