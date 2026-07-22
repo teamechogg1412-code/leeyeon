@@ -4,6 +4,11 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
+  // Keep brand hero wired even when seed data already exists (uploads/ is gitignored).
+  await prisma.stage.updateMany({
+    data: { heroUrl: "/brand/leeyeon-hero.jpg" },
+  });
+
   const existing = await prisma.user.count();
   if (existing > 0) {
     console.log("Seed skipped — database already has users.");
@@ -47,7 +52,7 @@ async function main() {
       name: "LEE YEON",
       slug: "leeyeon",
       tagline: "Official Fan Community",
-      heroUrl: "/uploads/leeyeon-hero.jpg",
+      heroUrl: "/brand/leeyeon-hero.jpg",
       description:
         "배우 이연 공식 팬 커뮤니티 · 콘텐츠 · 멤버십 · 샵을 한곳에서.",
     },
