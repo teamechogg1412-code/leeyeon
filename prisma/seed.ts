@@ -4,22 +4,11 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.notification.deleteMany();
-  await prisma.orderItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.membership.deleteMany();
-  await prisma.contentReaction.deleteMany();
-  await prisma.contentComment.deleteMany();
-  await prisma.postReaction.deleteMany();
-  await prisma.comment.deleteMany();
-  await prisma.post.deleteMany();
-  await prisma.board.deleteMany();
-  await prisma.story.deleteMany();
-  await prisma.content.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.membershipPlan.deleteMany();
-  await prisma.stage.deleteMany();
-  await prisma.user.deleteMany();
+  const existing = await prisma.user.count();
+  if (existing > 0) {
+    console.log("Seed skipped — database already has users.");
+    return;
+  }
 
   const passwordHash = await bcrypt.hash("password123", 10);
 

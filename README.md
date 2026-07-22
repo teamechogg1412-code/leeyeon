@@ -21,12 +21,19 @@ TOSS_SECRET_KEY=test_sk_...
 키가 없으면 기존처럼 **데모 결제**로 바로 주문이 완료됩니다.
 
 > GitHub Pages(`*.github.io`)는 정적 미리보기만 제공합니다.  
-> 실제 앱은 로컬 또는 Vercel에서 실행하세요.
+> 실제 앱은 로컬 또는 **Vercel + Neon Postgres**에서 실행하세요.
 
 ## Quick start
 
 ```bash
+# 1) Postgres (Docker)
+docker compose up -d
+
+# 2) Env
 cp .env.example .env
+# set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/fanstage?schema=public
+# set AUTH_SECRET to any long random string
+
 npm install
 npx prisma migrate dev
 npm run db:seed
@@ -44,15 +51,14 @@ Open http://localhost:3000
 
 ## Deploy (Vercel)
 
-1. GitHub repo를 Vercel에 Import
-2. Environment Variables:
-   - `DATABASE_URL` (권장: Neon/Postgres — SQLite는 Vercel에서 비권장)
-   - `AUTH_SECRET` (랜덤 문자열)
-3. Build Command: `prisma migrate deploy && prisma db seed && next build` (또는 Dashboard에서 설정)
-4. Deploy
+1. GitHub repo를 [Vercel Import](https://vercel.com/new)로 연결
+2. **Storage**에서 Neon Postgres 추가 (Marketplace → Neon) — `DATABASE_URL` 자동 주입
+3. Environment Variables 추가:
+   - `AUTH_SECRET` (랜덤 긴 문자열)
+4. Deploy — build에서 `prisma migrate deploy` + seed + `next build` 실행
 
-로컬 파일 업로드(`public/uploads`)는 Vercel 서버리스에서 영구 저장되지 않습니다.  
-프로덕션에서는 S3/Cloudflare R2/Vercel Blob로 교체하면 됩니다.
+로컬 파일 업로드(`public/uploads`)는 Vercel에서 영구 저장되지 않습니다.  
+프로덕션에서는 S3 / R2 / Vercel Blob로 바꾸면 됩니다.
 
 ## Next phase ideas
 
