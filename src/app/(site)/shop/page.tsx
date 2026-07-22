@@ -73,7 +73,16 @@ export default async function ShopPage() {
               key={product.id}
               className="overflow-hidden rounded-2xl border border-line bg-surface"
             >
-              <div className="h-40 bg-gradient-to-br from-[#ece7e1] to-[#d8cfc4]" />
+              {product.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="h-40 w-full object-cover"
+                />
+              ) : (
+                <div className="h-40 bg-gradient-to-br from-[#ece7e1] to-[#d8cfc4]" />
+              )}
               <div className="p-4">
                 <h3 className="font-medium">{product.name}</h3>
                 <p className="mt-1 text-xs text-muted">{product.description}</p>

@@ -23,7 +23,11 @@ export default async function WritePage({
   return (
     <div className="page-shell max-w-xl">
       <h1 className="text-2xl font-semibold">글쓰기</h1>
-      <form action={createPostAction} className="mt-6 space-y-4">
+      <form
+        action={createPostAction}
+        encType="multipart/form-data"
+        className="mt-6 space-y-4"
+      >
         <label className="block text-sm">
           <span className="mb-1.5 block text-muted">게시판</span>
           <select
@@ -54,6 +58,15 @@ export default async function WritePage({
             rows={10}
             required
             className="w-full resize-y rounded-xl border border-line bg-surface px-3 py-2.5 text-sm outline-none"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1.5 block text-muted">이미지 (선택, 5MB 이하)</span>
+          <input
+            name="image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="w-full text-sm"
           />
         </label>
         <button

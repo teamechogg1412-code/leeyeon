@@ -25,6 +25,7 @@ export default async function FromPage() {
       {isOwner && (
         <form
           action={createStoryAction}
+          encType="multipart/form-data"
           className="mt-8 space-y-3 rounded-2xl border border-line bg-surface p-5"
         >
           <textarea
@@ -34,6 +35,7 @@ export default async function FromPage() {
             className="w-full resize-none rounded-xl border border-line bg-transparent px-3 py-2 text-sm outline-none focus:border-black/30"
             required
           />
+          <input name="image" type="file" accept="image/*" className="text-sm" />
           <button
             type="submit"
             className="rounded-full bg-black px-4 py-2 text-sm text-white"
@@ -52,6 +54,14 @@ export default async function FromPage() {
             <p className="whitespace-pre-wrap text-[15px] leading-relaxed">
               {story.body}
             </p>
+            {story.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={story.imageUrl}
+                alt=""
+                className="mt-4 max-h-80 w-full rounded-xl object-cover"
+              />
+            )}
             <p className="mt-4 text-xs text-muted">
               {story.author.nickname} ·{" "}
               {format(story.createdAt, "yyyy.MM.dd HH:mm", { locale: ko })}

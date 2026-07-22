@@ -1,21 +1,22 @@
 # FANSTAGE · LEE YEON
 
-b.stage 스타일 올인원 팬 플랫폼 MVP
+b.stage 스타일 올인원 팬 플랫폼
 
-> **GitHub Pages** (`*.github.io`) 는 정적 파일만 호스팅합니다.  
-> Next.js + DB + 로그인이 필요한 **실제 앱**은 아래 Quick start로 실행하세요.  
-> github.io 주소에는 UI 미리보기(`index.html`)가 표시됩니다.
+## Phase status
 
-- Home / From / Contents / Community / Shop
-- 멤버십 권한 · 디지털 회원카드
-- 데모 결제(주문) · 알림 · 오너 Admin
+- **Phase 1** — Home / From / Contents / Community / Shop / Membership / Admin MVP
+- **Phase 2** — 이미지 업로드, 검색·페이지네이션, 글/댓글 삭제, Admin 게시판·멤버십 관리, Vercel 준비
 
-## Quick start (실제 앱)
+> GitHub Pages(`*.github.io`)는 정적 미리보기만 제공합니다.  
+> 실제 앱은 로컬 또는 Vercel에서 실행하세요.
+
+## Quick start
 
 ```bash
+cp .env.example .env
 npm install
 npx prisma migrate dev
-npx tsx prisma/seed.ts
+npm run db:seed
 npm run dev
 ```
 
@@ -28,4 +29,21 @@ Open http://localhost:3000
 | Fan   | fan@fanstage.app   | password123 |
 | Owner | owner@fanstage.app | password123 |
 
-`fan@fanstage.app` 은 멤버십이 이미 활성화되어 있습니다.
+## Deploy (Vercel)
+
+1. GitHub repo를 Vercel에 Import
+2. Environment Variables:
+   - `DATABASE_URL` (권장: Neon/Postgres — SQLite는 Vercel에서 비권장)
+   - `AUTH_SECRET` (랜덤 문자열)
+3. Build Command: `prisma migrate deploy && prisma db seed && next build` (또는 Dashboard에서 설정)
+4. Deploy
+
+로컬 파일 업로드(`public/uploads`)는 Vercel 서버리스에서 영구 저장되지 않습니다.  
+프로덕션에서는 S3/Cloudflare R2/Vercel Blob로 교체하면 됩니다.
+
+## Next phase ideas
+
+- 실제 PG 결제 (Toss/Stripe)
+- 클라우드 이미지 스토리지
+- 멀티 테넌트 (여러 아티스트)
+- 라이브 / POP 채팅

@@ -2,7 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { createCommentAction } from "@/lib/actions";
+import {
+  createCommentAction,
+  deleteCommentAction,
+  deletePostAction,
+} from "@/lib/actions";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -26,6 +30,11 @@ export default async function PostDetailPage({
   });
   if (!post) notFound();
 
+  const isOwnerRole =
+    session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
+  const canDeletePost =
+    session?.user?.id === post.authorId || Boolean(isOwnerRole);
+
   return (
     <div className="page-shell max-w-2xl">
       <Link
@@ -36,7 +45,20 @@ export default async function PostDetailPage({
       </Link>
 
       <article className="mt-4 border-b border-line pb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">{post.title}</h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-2xl font-semibold tracking-tight">{post.title}</h1>
+          {canDeletePost && (
+            <form action={deletePostAction}>
+              <input type="hidden" name="postId" value={post.id} />
+              <button
+                type="submit"
+                className="text-xs text-muted hover:text-accent"
+              >
+                삭제
+              </button>
+            </form>
+          )}
+        </div>
         <p className="mt-2 text-sm text-muted">
           {post.author.nickname} ·{" "}
           {format(post.createdAt, "yyyy.MM.dd HH:mm", { locale: ko })}
@@ -44,21 +66,46 @@ export default async function PostDetailPage({
         <div className="mt-6 whitespace-pre-wrap text-[15px] leading-7">
           {post.body}
         </div>
+        {post.imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={post.imageUrl}
+            alt=""
+            className="mt-6 max-h-[480px] w-full rounded-2xl object-cover"
+          />
+        )}
       </article>
 
       <section className="mt-6">
-        <h2 className="text-sm font-semibold">
-          댓글 {post.comments.length}
-        </h2>
+        <h2 className="text-sm font-semibold">댓글 {post.comments.length}</h2>
         <div className="mt-4 space-y-4">
-          {post.comments.map((comment) => (
-            <div key={comment.id} className="border-b border-line pb-4">
-              <p className="text-sm font-medium">{comment.author.nickname}</p>
-              <p className="mt-1 text-sm leading-relaxed text-black/75">
-                {comment.body}
-              </p>
-            </div>
-          ))}
+          {post.comments.map((comment) => {
+            const canDeleteComment =
+              session?.user?.id === comment.authorId || Boolean(isOwnerRole);
+            return (
+              <div key={comment.id} className="border-b border-line pb-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium">
+                    {comment.author.nickname}
+                  </p>
+                  {canDeleteComment && (
+                    <form action={deleteCommentAction}>
+                      <input type="hidden" name="commentId" value={comment.id} />
+                      <button
+                        type="submit"
+                        className="text-xs text-muted hover:text-accent"
+                      >
+                        삭제
+                      </button>
+                    </form>
+                  )}
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-black/75">
+                  {comment.body}
+                </p>
+              </div>
+            );
+          })}
         </div>
 
         {session ? (

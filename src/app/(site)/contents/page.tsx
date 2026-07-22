@@ -28,7 +28,18 @@ export default async function ContentsPage() {
               href={locked ? "/shop/membership" : `/contents/${content.id}`}
               className="group overflow-hidden rounded-2xl border border-line bg-surface"
             >
-              <div className="flex h-36 items-end bg-gradient-to-br from-[#1a1a1a] to-[#3a2a2a] p-4 text-white">
+              <div
+                className="relative flex h-36 items-end bg-gradient-to-br from-[#1a1a1a] to-[#3a2a2a] p-4 text-white"
+                style={
+                  content.coverUrl
+                    ? {
+                        backgroundImage: `linear-gradient(to top, rgba(0,0,0,.55), transparent), url(${content.coverUrl})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : undefined
+                }
+              >
                 <span className="text-[11px] uppercase tracking-wider text-white/60">
                   {content.membershipRequired ? "Members only" : "Free"}
                 </span>
