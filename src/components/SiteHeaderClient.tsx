@@ -58,7 +58,7 @@ export function SiteHeaderClient({
         <nav
           className={
             isHome
-              ? "hidden items-center gap-7 text-[13px] tracking-wide text-white/70 md:flex"
+              ? "hidden items-center gap-7 text-[13px] tracking-wide text-white md:flex"
               : "hidden items-center gap-7 text-[13px] tracking-wide text-black/55 md:flex"
           }
         >
@@ -75,7 +75,7 @@ export function SiteHeaderClient({
                   isHome
                     ? isActive
                       ? "font-semibold text-white"
-                      : "transition hover:text-white"
+                      : "text-white transition hover:opacity-80"
                     : isActive
                       ? "font-semibold text-black"
                       : "transition hover:text-black"
@@ -92,7 +92,7 @@ export function SiteHeaderClient({
             href="/search"
             className={
               isHome
-                ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                ? "rounded-full p-2 text-white hover:bg-white/10"
                 : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
             }
             aria-label="Search"
@@ -116,7 +116,7 @@ export function SiteHeaderClient({
                 href="/notifications"
                 className={
                   isHome
-                    ? "relative rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                    ? "relative rounded-full p-2 text-white hover:bg-white/10"
                     : "relative rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
                 }
                 aria-label="Notifications"
@@ -169,7 +169,7 @@ export function SiteHeaderClient({
                   type="submit"
                   className={
                     isHome
-                      ? "rounded-full px-3 py-1.5 text-xs text-white/60 hover:text-white"
+                      ? "rounded-full px-3 py-1.5 text-xs text-white hover:opacity-80"
                       : "rounded-full px-3 py-1.5 text-xs text-black/50 hover:text-black"
                   }
                 >
