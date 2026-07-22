@@ -98,7 +98,16 @@ Open http://localhost:3000
 
 키가 없으면 인앱 알림만 동작하고 푸시는 건너뜁니다.
 
+### Membership badges & profile
+
+- Plans have `tierLabel` / `badgeColor` (Admin에서 설정)
+- Badges show on My Page, community, contents comments, POP
+- `/me`에서 닉네임·한줄소개·프로필 사진 수정 + 디지털 회원카드
+
 ## Next phase ideas
 
-- 멤버십 티어별 배지 / 프로필 커스텀
 - 검색·필터 고도화
+- 오너 대시보드 통계
+- 비밀번호 찾기 / 이메일 인증
+- 주문·배송 관리 UI
+- PWA (홈 화면 추가)
