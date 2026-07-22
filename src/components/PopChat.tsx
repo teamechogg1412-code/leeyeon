@@ -211,7 +211,9 @@ export function PopChat({
         })}
         {messages.length === 0 && (
           <p className="py-16 text-center text-sm text-muted">
-            첫 메시지를 남겨보세요.
+            {canChat
+              ? "첫 메시지를 남겨보세요."
+              : "아직 대화 내용이 없습니다."}
           </p>
         )}
         <div ref={bottomRef} />

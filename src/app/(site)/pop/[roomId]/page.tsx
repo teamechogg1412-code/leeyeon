@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Radio } from "lucide-react";
 import { PopChat } from "@/components/PopChat";
+import { togglePopLiveAction } from "@/lib/actions";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { getActiveMembership } from "@/lib/membership";
 import { fetchPopMessages } from "@/lib/popMessages";
@@ -31,7 +32,15 @@ export default async function PopRoomPage({
     take: 100,
   });
 
-  const canChat = Boolean(session?.user?.id);
+  const loggedIn = Boolean(session?.user?.id);
+  const canChat = loggedIn && room.live;
+  let lockedReason: string | undefined;
+  if (!loggedIn) {
+    lockedReason = "메시지를 보내려면 로그인하세요.";
+  } else if (!room.live) {
+    lockedReason = "라이브가 종료되어 채팅이 잠겼습니다. 대화 내용은 계속 볼 수 있어요.";
+  }
+
   let currentUser: {
     id: string;
     nickname: string;
@@ -59,16 +68,20 @@ export default async function PopRoomPage({
 
   return (
     <div className="page-shell max-w-2xl space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <Link href="/pop" className="text-xs text-muted hover:text-black">
             ← POP
           </Link>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold">{room.title}</h1>
-            {room.live && (
+            {room.live ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-[#c81e1e] px-2 py-0.5 text-[10px] font-semibold text-white">
                 <Radio size={10} /> LIVE
+              </span>
+            ) : (
+              <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-medium text-muted">
+                ENDED
               </span>
             )}
           </div>
@@ -76,6 +89,23 @@ export default async function PopRoomPage({
             <p className="mt-1 text-sm text-muted">{room.description}</p>
           )}
         </div>
+
+        {isOwner && (
+          <form action={togglePopLiveAction}>
+            <input type="hidden" name="roomId" value={room.id} />
+            <input type="hidden" name="live" value={room.live ? "0" : "1"} />
+            <button
+              type="submit"
+              className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                room.live
+                  ? "border border-line text-muted hover:bg-black/5"
+                  : "bg-black text-white"
+              }`}
+            >
+              {room.live ? "라이브 종료" : "라이브 시작"}
+            </button>
+          </form>
+        )}
       </div>
 
       <PopChat
@@ -83,9 +113,7 @@ export default async function PopRoomPage({
         initialMessages={messages}
         canChat={canChat}
         currentUser={currentUser}
-        lockedReason={
-          canChat ? undefined : "메시지를 보내려면 로그인하세요."
-        }
+        lockedReason={lockedReason}
       />
     </div>
   );

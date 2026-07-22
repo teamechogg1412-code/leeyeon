@@ -37,9 +37,13 @@ export default async function PopPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {room.live && (
+                    {room.live ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#c81e1e] px-2 py-0.5 text-[10px] font-semibold text-white">
                         <Radio size={10} /> LIVE
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-medium text-muted">
+                        ENDED
                       </span>
                     )}
                     {room.membershipRequired && (

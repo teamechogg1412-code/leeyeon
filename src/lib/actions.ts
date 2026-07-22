@@ -918,6 +918,39 @@ export async function createPopRoomAction(formData: FormData): Promise<void> {
   redirect(`/pop/${room.id}`);
 }
 
+export async function togglePopLiveAction(formData: FormData): Promise<void> {
+  const { session, isOwner } = await getCurrentUserAccess();
+  if (!session?.user?.id || !isOwner) redirect("/login");
+
+  const roomId = String(formData.get("roomId") || "").trim();
+  const live = formData.get("live") === "1";
+  if (!roomId) redirect("/pop");
+
+  const room = await prisma.popRoom.findUnique({ where: { id: roomId } });
+  if (!room) redirect("/pop");
+
+  await prisma.popRoom.update({
+    where: { id: roomId },
+    data: { live },
+  });
+
+  if (live) {
+    await notifyFans({
+      title: "POP LIVE 시작",
+      body: room.title,
+      href: `/pop/${room.id}`,
+      type: "POP",
+      excludeUserId: session.user.id,
+      membersOnly: room.membershipRequired,
+    });
+  }
+
+  revalidatePath("/pop");
+  revalidatePath(`/pop/${roomId}`);
+  revalidatePath("/notifications");
+  redirect(`/pop/${roomId}`);
+}
+
 export async function sendPopMessageAction(formData: FormData): Promise<void> {
   const { session, isMember, isOwner } = await getCurrentUserAccess();
   if (!session?.user?.id) redirect("/login");
@@ -928,6 +961,7 @@ export async function sendPopMessageAction(formData: FormData): Promise<void> {
 
   const room = await prisma.popRoom.findUnique({ where: { id: roomId } });
   if (!room) return;
+  if (!room.live) return;
   if (room.membershipRequired && !isMember && !isOwner) {
     redirect("/shop/membership");
   }
