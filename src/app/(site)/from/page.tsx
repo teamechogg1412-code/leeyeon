@@ -3,15 +3,32 @@ import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 import { createStoryAction } from "@/lib/actions";
 import { avatarColor, avatarInitial } from "@/lib/avatar";
+import { SearchBar } from "@/components/SearchFilters";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
 import { ImageUploadField } from "@/components/ImageUploadField";
 
-export default async function FromPage() {
+export default async function FromPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q: qRaw } = await searchParams;
+  const q = (qRaw || "").trim();
   const stage = await getStage();
   const { isOwner } = await getCurrentUserAccess();
   const stories = await prisma.story.findMany({
-    where: { stageId: stage.id },
+    where: {
+      stageId: stage.id,
+      ...(q
+        ? {
+            OR: [
+              { body: { contains: q, mode: "insensitive" } },
+              { author: { nickname: { contains: q, mode: "insensitive" } } },
+            ],
+          }
+        : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: { author: true },
   });
@@ -20,6 +37,14 @@ export default async function FromPage() {
     <div className="page-shell max-w-[640px]">
       <h1 className="text-[22px] font-semibold tracking-tight">From Yeon</h1>
       <p className="mt-1 text-sm text-muted">공식 메시지와 일상을 전합니다.</p>
+
+      <div className="mt-5">
+        <SearchBar
+          action="/from"
+          q={q}
+          placeholder="메시지 내용 검색"
+        />
+      </div>
 
       {isOwner && (
         <form
@@ -102,7 +127,7 @@ export default async function FromPage() {
         ))}
         {stories.length === 0 && (
           <p className="py-16 text-center text-sm text-muted">
-            아직 메시지가 없습니다.
+            {q ? "검색 결과가 없습니다." : "아직 메시지가 없습니다."}
           </p>
         )}
       </div>

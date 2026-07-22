@@ -18,6 +18,7 @@ b.stage 스타일 올인원 팬 플랫폼
 - **Phase 12** — 영상 직접 업로드 (Blob client upload + 로컬 폴백)
 - **Phase 13** — 브라우저 푸시 알림 (Web Push + VAPID)
 - **Phase 14** — 멤버십 티어 배지 / 프로필 커스텀
+- **Phase 15** — 검색·필터 고도화
 
 ## Toss Payments
 
@@ -104,9 +105,15 @@ Open http://localhost:3000
 - Badges show on My Page, community, contents comments, POP
 - `/me`에서 닉네임·한줄소개·프로필 사진 수정 + 디지털 회원카드
 
+### Search & filters
+
+- Header 검색 아이콘 → `/search` 통합 검색
+- Contents: 카테고리 / 무료·멤버십 / 최신·인기
+- Community: 검색 + 최신·댓글·조회순
+- Shop / From / Schedule: 검색 (+ Schedule 카테고리 필터)
+
 ## Next phase ideas
 
-- 검색·필터 고도화
 - 오너 대시보드 통계
 - 비밀번호 찾기 / 이메일 인증
 - 주문·배송 관리 UI

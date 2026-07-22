@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CalendarDays, ShoppingBag, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Search, ShoppingBag, UserRound } from "lucide-react";
 
 const nav = [
   { href: "/", label: "Home" },
@@ -83,6 +83,17 @@ export function SiteHeaderClient({
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/search"
+            className={
+              isHome
+                ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
+            }
+            aria-label="Search"
+          >
+            <Search size={18} />
+          </Link>
           {isLoggedIn ? (
             <>
               <Link

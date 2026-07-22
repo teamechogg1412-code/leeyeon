@@ -13,6 +13,8 @@ import {
 import { ko } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, MapPin, BellRing } from "lucide-react";
 import { differenceInHours, isBefore, addHours } from "date-fns";
+import { FilterChips, SearchBar } from "@/components/SearchFilters";
+import { buildQuery } from "@/lib/search";
 import { getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
 import { sendUpcomingScheduleReminders } from "@/lib/scheduleReminders";
@@ -24,19 +26,26 @@ const CATEGORY_STYLE: Record<string, string> = {
   RELEASE: "bg-[#8b5a4a] text-white",
 };
 
+const CATEGORIES = ["EVENT", "BROADCAST", "FANMEETING", "RELEASE"] as const;
+
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string }>;
+  searchParams: Promise<{ ym?: string; cat?: string; q?: string }>;
 }) {
   const stage = await getStage();
   const sp = await searchParams;
+  const q = (sp.q || "").trim();
+  const cat = CATEGORIES.includes(sp.cat as (typeof CATEGORIES)[number])
+    ? (sp.cat as string)
+    : "";
   const base = sp.ym ? new Date(`${sp.ym}-01T00:00:00`) : new Date();
   const monthStart = startOfMonth(base);
   const monthEnd = endOfMonth(base);
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 });
   const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
+  const ym = format(monthStart, "yyyy-MM");
 
   const events = await prisma.scheduleEvent.findMany({
     where: {
@@ -45,6 +54,16 @@ export default async function SchedulePage({
         gte: gridStart,
         lte: new Date(gridEnd.getTime() + 24 * 60 * 60 * 1000 - 1),
       },
+      ...(cat ? { category: cat } : {}),
+      ...(q
+        ? {
+            OR: [
+              { title: { contains: q, mode: "insensitive" } },
+              { description: { contains: q, mode: "insensitive" } },
+              { location: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
     },
     orderBy: { startsAt: "asc" },
   });
@@ -77,7 +96,7 @@ export default async function SchedulePage({
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href={`/schedule?ym=${prev}`}
+            href={`/schedule${buildQuery({ ym: prev, cat, q })}`}
             className="rounded-full border border-line p-2 hover:bg-black/5"
             aria-label="Previous month"
           >
@@ -87,13 +106,36 @@ export default async function SchedulePage({
             {format(monthStart, "yyyy. M", { locale: ko })}
           </p>
           <Link
-            href={`/schedule?ym=${next}`}
+            href={`/schedule${buildQuery({ ym: next, cat, q })}`}
             className="rounded-full border border-line p-2 hover:bg-black/5"
             aria-label="Next month"
           >
             <ChevronRight size={16} />
           </Link>
         </div>
+      </div>
+
+      <div className="space-y-3">
+        <SearchBar
+          action="/schedule"
+          q={q}
+          placeholder="일정 제목 · 장소 검색"
+          preserve={{ ym, cat }}
+        />
+        <FilterChips
+          items={[
+            {
+              label: "전체",
+              href: `/schedule${buildQuery({ ym, q })}`,
+              active: !cat,
+            },
+            ...CATEGORIES.map((c) => ({
+              label: c,
+              href: `/schedule${buildQuery({ ym, q, cat: c })}`,
+              active: cat === c,
+            })),
+          ]}
+        />
       </div>
 
       {soon.length > 0 && (

@@ -1,27 +1,59 @@
 import Link from "next/link";
 import { purchaseMembershipAction } from "@/lib/actions";
+import { FilterChips, SearchBar } from "@/components/SearchFilters";
+import { buildQuery } from "@/lib/search";
 import { formatPrice, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 type Tab = "all" | "md" | "membership";
 
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; q?: string }>;
 }) {
-  const { tab: tabRaw } = await searchParams;
+  const { tab: tabRaw, q: qRaw } = await searchParams;
   const tab = (["all", "md", "membership"].includes(tabRaw || "")
     ? tabRaw
     : "all") as Tab;
+  const q = (qRaw || "").trim();
 
   const stage = await getStage();
+
+  const planWhere: Prisma.MembershipPlanWhereInput = {
+    stageId: stage.id,
+    active: true,
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { description: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const productWhere: Prisma.ProductWhereInput = {
+    stageId: stage.id,
+    active: true,
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { description: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
   const [plans, products] = await Promise.all([
     prisma.membershipPlan.findMany({
-      where: { stageId: stage.id, active: true },
+      where: planWhere,
+      orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
     }),
     prisma.product.findMany({
-      where: { stageId: stage.id, active: true },
+      where: productWhere,
       orderBy: { createdAt: "desc" },
     }),
   ]);
@@ -33,30 +65,34 @@ export default async function ShopPage({
   ];
 
   return (
-    <div className="page-shell">
-      <nav className="flex gap-6 border-b border-line text-[14px]">
-        {tabs.map((t) => (
-          <Link
-            key={t.key}
-            href={`/shop?tab=${t.key}`}
-            className={`-mb-px border-b-2 pb-3 ${
-              tab === t.key
-                ? "border-black font-semibold text-black"
-                : "border-transparent text-black/45 hover:text-black"
-            }`}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+    <div className="page-shell space-y-6">
+      <div>
+        <h1 className="text-[22px] font-semibold tracking-tight">Shop</h1>
+        <p className="mt-1 text-sm text-muted">멤버십과 공식 MD</p>
+      </div>
+
+      <SearchBar
+        action="/shop"
+        q={q}
+        placeholder="상품 · 멤버십 검색"
+        preserve={{ tab: tab === "all" ? "" : tab }}
+      />
+
+      <FilterChips
+        items={tabs.map((t) => ({
+          label: t.label,
+          href: `/shop${buildQuery({ tab: t.key === "all" ? "" : t.key, q })}`,
+          active: tab === t.key,
+        }))}
+      />
 
       {(tab === "all" || tab === "membership") && (
-        <section className="mt-8">
+        <section>
           {tab === "all" && (
             <div className="mb-4 flex items-end justify-between">
               <h2 className="text-base font-semibold">Membership</h2>
               <Link
-                href="/shop?tab=membership"
+                href={`/shop${buildQuery({ tab: "membership", q })}`}
                 className="text-xs text-muted hover:text-black"
               >
                 Go to Membership &gt;
@@ -75,10 +111,18 @@ export default async function ShopPage({
                       Membership
                     </p>
                     <h3 className="mt-2 text-xl font-semibold">{plan.name}</h3>
+                    {plan.tierLabel && (
+                      <span
+                        className="mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        style={{ background: plan.badgeColor || "#444" }}
+                      >
+                        {plan.tierLabel}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="p-4">
-                  <p className="text-sm text-muted line-clamp-2">
+                  <p className="line-clamp-2 text-sm text-muted">
                     {plan.description}
                   </p>
                   <p className="mt-3 text-[17px] font-semibold">
@@ -102,16 +146,21 @@ export default async function ShopPage({
               </div>
             ))}
           </div>
+          {plans.length === 0 && (
+            <p className="py-10 text-center text-sm text-muted">
+              검색된 멤버십이 없습니다.
+            </p>
+          )}
         </section>
       )}
 
       {(tab === "all" || tab === "md") && (
-        <section className={tab === "all" ? "mt-12" : "mt-8"}>
+        <section className={tab === "all" ? "mt-4" : ""}>
           {tab === "all" && (
             <div className="mb-4 flex items-end justify-between">
               <h2 className="text-base font-semibold">MD</h2>
               <Link
-                href="/shop?tab=md"
+                href={`/shop${buildQuery({ tab: "md", q })}`}
                 className="text-xs text-muted hover:text-black"
               >
                 Go to MD &gt;
@@ -158,7 +207,7 @@ export default async function ShopPage({
           </div>
           {products.length === 0 && (
             <p className="py-16 text-center text-sm text-muted">
-              등록된 상품이 없습니다.
+              {q ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}
             </p>
           )}
         </section>

@@ -1,21 +1,32 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { List, Diamond, Lock, Search } from "lucide-react";
+import { List, Diamond, Lock } from "lucide-react";
+import { FilterChips, SearchBar } from "@/components/SearchFilters";
+import { buildQuery } from "@/lib/search";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 const PAGE_SIZE = 10;
+type Sort = "new" | "comments" | "views";
 
 export default async function BoardPage({
   params,
   searchParams,
 }: {
   params: Promise<{ boardId: string }>;
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; sort?: string }>;
 }) {
   const { boardId } = await params;
-  const { q = "", page: pageRaw = "1" } = await searchParams;
+  const {
+    q = "",
+    page: pageRaw = "1",
+    sort: sortRaw = "new",
+  } = await searchParams;
   const page = Math.max(1, Number(pageRaw) || 1);
+  const sort = (["new", "comments", "views"].includes(sortRaw)
+    ? sortRaw
+    : "new") as Sort;
   const stage = await getStage();
   const { isMember, session } = await getCurrentUserAccess();
 
@@ -30,18 +41,25 @@ export default async function BoardPage({
   const locked = board.membershipRequired && !isMember;
   const query = q.trim();
 
-  const where = {
+  const where: Prisma.PostWhereInput = {
     boardId: board.id,
     ...(query
       ? {
           OR: [
-            { title: { contains: query } },
-            { body: { contains: query } },
-            { author: { nickname: { contains: query } } },
+            { title: { contains: query, mode: "insensitive" } },
+            { body: { contains: query, mode: "insensitive" } },
+            { author: { nickname: { contains: query, mode: "insensitive" } } },
           ],
         }
       : {}),
   };
+
+  const orderBy: Prisma.PostOrderByWithRelationInput[] =
+    sort === "comments"
+      ? [{ comments: { _count: "desc" } }, { createdAt: "desc" }]
+      : sort === "views"
+        ? [{ viewCount: "desc" }, { createdAt: "desc" }]
+        : [{ createdAt: "desc" }];
 
   const [total, posts] = locked
     ? [0, []]
@@ -49,7 +67,7 @@ export default async function BoardPage({
         prisma.post.count({ where }),
         prisma.post.findMany({
           where,
-          orderBy: { createdAt: "desc" },
+          orderBy,
           skip: (page - 1) * PAGE_SIZE,
           take: PAGE_SIZE,
           include: {
@@ -65,6 +83,7 @@ export default async function BoardPage({
       ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const qs = { q: query, sort: sort === "new" ? "" : sort };
 
   return (
     <div className="page-shell">
@@ -115,20 +134,38 @@ export default async function BoardPage({
           </div>
 
           {!locked && (
-            <form className="mb-5" action={`/community/board/${board.id}`}>
-              <label className="relative block">
-                <Search
-                  size={15}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-                />
-                <input
-                  name="q"
-                  defaultValue={query}
-                  placeholder="제목, 내용, 닉네임 검색"
-                  className="w-full rounded-xl border border-line bg-surface py-2.5 pl-9 pr-3 text-sm outline-none focus:border-black/30"
-                />
-              </label>
-            </form>
+            <div className="mb-5 space-y-3">
+              <SearchBar
+                action={`/community/board/${board.id}`}
+                q={query}
+                placeholder="제목, 내용, 닉네임 검색"
+                preserve={{ sort: sort === "new" ? "" : sort }}
+              />
+              <FilterChips
+                items={[
+                  {
+                    label: "최신순",
+                    href: `/community/board/${board.id}${buildQuery({ ...qs, sort: "" })}`,
+                    active: sort === "new",
+                  },
+                  {
+                    label: "댓글순",
+                    href: `/community/board/${board.id}${buildQuery({ ...qs, sort: "comments" })}`,
+                    active: sort === "comments",
+                  },
+                  {
+                    label: "조회순",
+                    href: `/community/board/${board.id}${buildQuery({ ...qs, sort: "views" })}`,
+                    active: sort === "views",
+                  },
+                ]}
+              />
+              {query && (
+                <p className="text-xs text-muted">
+                  “{query}” 검색 결과 {total}개
+                </p>
+              )}
+            </div>
           )}
 
           {locked ? (
@@ -169,6 +206,8 @@ export default async function BoardPage({
                         </div>
                         <p className="mt-1.5 text-[13px] text-muted">
                           {post.author.nickname}
+                          <span className="mx-1.5 text-black/20">·</span>
+                          조회 {post.viewCount}
                         </p>
                         {latest && (
                           <p className="mt-1 line-clamp-1 text-[13px] text-black/45">
@@ -200,7 +239,10 @@ export default async function BoardPage({
                 <div className="mt-6 flex items-center justify-center gap-2 text-sm">
                   {page > 1 && (
                     <Link
-                      href={`/community/board/${board.id}?q=${encodeURIComponent(query)}&page=${page - 1}`}
+                      href={`/community/board/${board.id}${buildQuery({
+                        ...qs,
+                        page: String(page - 1),
+                      })}`}
                       className="rounded-full border border-line px-3 py-1.5"
                     >
                       이전
@@ -211,7 +253,10 @@ export default async function BoardPage({
                   </span>
                   {page < totalPages && (
                     <Link
-                      href={`/community/board/${board.id}?q=${encodeURIComponent(query)}&page=${page + 1}`}
+                      href={`/community/board/${board.id}${buildQuery({
+                        ...qs,
+                        page: String(page + 1),
+                      })}`}
                       className="rounded-full border border-line px-3 py-1.5"
                     >
                       다음
