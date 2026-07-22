@@ -57,6 +57,7 @@ model Stage {
   description String?
   logoUrl     String?
   heroUrl     String?
+  shopEnabled Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

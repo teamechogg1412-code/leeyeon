@@ -812,6 +812,7 @@ export async function updateStageAction(formData: FormData): Promise<void> {
   const name = String(formData.get("name") || "").trim();
   const tagline = String(formData.get("tagline") || "").trim();
   const description = String(formData.get("description") || "").trim();
+  const shopEnabled = formData.get("shopEnabled") === "on";
   if (!name) redirect("/admin");
 
   const hero = formData.get("hero");
@@ -827,11 +828,13 @@ export async function updateStageAction(formData: FormData): Promise<void> {
       name,
       tagline,
       description,
+      shopEnabled,
       ...(heroUrl ? { heroUrl } : {}),
     },
   });
 
   revalidatePath("/");
+  revalidatePath("/shop");
   revalidatePath("/admin");
   redirect("/admin");
 }

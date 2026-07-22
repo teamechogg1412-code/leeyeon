@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { purchaseMembershipAction } from "@/lib/actions";
 import { FilterChips, SearchBar } from "@/components/SearchFilters";
 import { buildQuery } from "@/lib/search";
-import { formatPrice, getStage } from "@/lib/stage";
+import { formatPrice, getCurrentUserAccess, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
@@ -14,12 +15,17 @@ export default async function ShopPage({
   searchParams: Promise<{ tab?: string; q?: string }>;
 }) {
   const { tab: tabRaw, q: qRaw } = await searchParams;
-  const tab = (["all", "md", "membership"].includes(tabRaw || "")
+  const q = (qRaw || "").trim();
+  const stage = await getStage();
+  const { isOwner } = await getCurrentUserAccess();
+
+  const shopOpen = stage.shopEnabled || isOwner;
+  let tab = (["all", "md", "membership"].includes(tabRaw || "")
     ? tabRaw
     : "all") as Tab;
-  const q = (qRaw || "").trim();
-
-  const stage = await getStage();
+  if (!shopOpen) {
+    tab = "membership";
+  }
 
   const planWhere: Prisma.MembershipPlanWhereInput = {
     stageId: stage.id,
@@ -52,23 +58,38 @@ export default async function ShopPage({
       where: planWhere,
       orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
     }),
-    prisma.product.findMany({
-      where: productWhere,
-      orderBy: { createdAt: "desc" },
-    }),
+    shopOpen
+      ? prisma.product.findMany({
+          where: productWhere,
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
   ]);
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "all", label: "ALL" },
-    { key: "membership", label: "Membership" },
-    { key: "md", label: "MD" },
-  ];
+  const tabs: { key: Tab; label: string }[] = shopOpen
+    ? [
+        { key: "all", label: "ALL" },
+        { key: "membership", label: "Membership" },
+        { key: "md", label: "MD" },
+      ]
+    : [{ key: "membership", label: "Membership" }];
 
   return (
     <div className="page-shell space-y-6">
       <div>
-        <h1 className="text-[22px] font-semibold tracking-tight">Shop</h1>
-        <p className="mt-1 text-sm text-muted">멤버십과 공식 MD</p>
+        <h1 className="text-[22px] font-semibold tracking-tight">
+          {shopOpen ? "Shop" : "Membership"}
+        </h1>
+        <p className="mt-1 text-sm text-muted">
+          {shopOpen
+            ? "멤버십과 공식 MD"
+            : "공식 멤버십"}
+          {!stage.shopEnabled && isOwner && (
+            <span className="ml-2 text-[11px] text-muted">
+              (오너 미리보기 · Shop 비공개 중)
+            </span>
+          )}
+        </p>
       </div>
 
       <SearchBar

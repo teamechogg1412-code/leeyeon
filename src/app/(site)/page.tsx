@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { addDays, startOfDay } from "date-fns";
 import { ChevronRight, Play } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { avatarColor, avatarInitial } from "@/lib/avatar";
+import { HomeWeekSchedule } from "@/components/HomeWeekSchedule";
 import { getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
 
@@ -14,7 +16,12 @@ export default async function HomePage() {
     stage.heroUrl && !stage.heroUrl.startsWith("/uploads/")
       ? stage.heroUrl
       : DEFAULT_HERO;
-  const [stories, contents, posts, products] = await Promise.all([
+
+  const weekStart = startOfDay(new Date());
+  const weekEnd = addDays(weekStart, 7);
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  const [stories, contents, posts, products, weekEvents] = await Promise.all([
     prisma.story.findMany({
       where: { stageId: stage.id },
       orderBy: { createdAt: "desc" },
@@ -36,10 +43,19 @@ export default async function HomePage() {
         _count: { select: { comments: true } },
       },
     }),
-    prisma.product.findMany({
-      where: { stageId: stage.id, active: true },
-      orderBy: { createdAt: "desc" },
-      take: 4,
+    stage.shopEnabled
+      ? prisma.product.findMany({
+          where: { stageId: stage.id, active: true },
+          orderBy: { createdAt: "desc" },
+          take: 4,
+        })
+      : Promise.resolve([]),
+    prisma.scheduleEvent.findMany({
+      where: {
+        stageId: stage.id,
+        startsAt: { gte: weekStart, lt: weekEnd },
+      },
+      orderBy: { startsAt: "asc" },
     }),
   ]);
 
@@ -52,7 +68,6 @@ export default async function HomePage() {
 
   return (
     <div className="pb-8">
-      {/* Full-bleed magazine hero — nainwoo-style */}
       <section className="hero-bleed relative isolate min-h-[min(100svh,920px)] overflow-hidden bg-[#1a1c1e] text-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -62,7 +77,6 @@ export default async function HomePage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
 
-        {/* Oversized brand watermark */}
         <div className="pointer-events-none absolute inset-x-0 top-[9%] z-[1] px-3 text-center sm:top-[7%]">
           <p className="hero-brand-title mx-auto select-none font-[family-name:var(--font-display)] text-[clamp(5rem,18vw,12.5rem)] leading-[0.82] tracking-[-0.045em] text-black/[0.55] mix-blend-multiply drop-shadow-[0_2px_0_rgba(255,255,255,.08)]">
             YEON
@@ -72,7 +86,6 @@ export default async function HomePage() {
           </p>
         </div>
 
-        {/* Bottom brand + CTAs */}
         <div className="relative z-[2] flex min-h-[min(100svh,920px)] flex-col justify-end px-4 pb-12 pt-32 sm:pb-16">
           <div className="fade-up mx-auto w-full max-w-3xl text-center">
             <h1 className="font-[family-name:var(--font-display)] text-[clamp(2.6rem,7.5vw,5rem)] font-medium tracking-[-0.03em] text-white drop-shadow-[0_10px_40px_rgba(0,0,0,.55)]">
@@ -99,23 +112,32 @@ export default async function HomePage() {
               MEMBERSHIP
             </Link>
             <Link
+              href="/schedule"
+              className="rounded-full bg-black/50 px-5 py-2.5 text-[12px] font-medium tracking-wide text-white backdrop-blur-md transition hover:bg-black/65"
+            >
+              SCHEDULE
+            </Link>
+            <Link
               href="/community"
               className="rounded-full bg-black/50 px-5 py-2.5 text-[12px] font-medium tracking-wide text-white backdrop-blur-md transition hover:bg-black/65"
             >
               COMMUNITY
             </Link>
-            <Link
-              href="/shop"
-              className="rounded-full bg-[#c8d6cb] px-5 py-2.5 text-[12px] font-medium tracking-wide text-[#1a2a20] transition hover:bg-[#d7e4d9]"
-            >
-              SHOP
-            </Link>
+            {stage.shopEnabled && (
+              <Link
+                href="/shop"
+                className="rounded-full bg-[#c8d6cb] px-5 py-2.5 text-[12px] font-medium tracking-wide text-[#1a2a20] transition hover:bg-[#d7e4d9]"
+              >
+                SHOP
+              </Link>
+            )}
           </div>
         </div>
       </section>
 
       <div className="page-shell space-y-16 pt-10">
-        {/* From stories — vertical cards */}
+        <HomeWeekSchedule days={weekDays} events={weekEvents} />
+
         <section>
           <div className="mb-4 flex items-end justify-between">
             <h2 className="text-[17px] font-semibold">From Yeon</h2>
@@ -170,7 +192,6 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Notice-style cards */}
         <section>
           <div className="mb-4 flex items-end justify-between">
             <h2 className="text-[17px] font-semibold">Notice</h2>
@@ -218,7 +239,6 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Contents mosaic */}
         <section>
           <div className="mb-4 flex items-end justify-between">
             <h2 className="text-[17px] font-semibold">Contents</h2>
@@ -265,43 +285,44 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Shop strip */}
-        <section>
-          <div className="mb-4 flex items-end justify-between">
-            <h2 className="text-[17px] font-semibold">Shop</h2>
-            <Link
-              href="/shop"
-              className="inline-flex items-center gap-0.5 text-xs text-muted hover:text-black"
-            >
-              View all <ChevronRight size={14} />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {products.map((product) => (
+        {stage.shopEnabled && products.length > 0 && (
+          <section>
+            <div className="mb-4 flex items-end justify-between">
+              <h2 className="text-[17px] font-semibold">Shop</h2>
               <Link
-                key={product.id}
-                href={`/shop/products/${product.id}`}
-                className="group"
+                href="/shop"
+                className="inline-flex items-center gap-0.5 text-xs text-muted hover:text-black"
               >
-                <div className="aspect-square overflow-hidden rounded-2xl bg-[#f0eeea]">
-                  {product.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
-                    />
-                  ) : (
-                    <div className="h-full bg-gradient-to-br from-[#ece7e1] to-[#d8cfc4]" />
-                  )}
-                </div>
-                <h3 className="mt-2.5 line-clamp-2 text-[13px] leading-snug">
-                  {product.name}
-                </h3>
+                View all <ChevronRight size={14} />
               </Link>
-            ))}
-          </div>
-        </section>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {products.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/shop/products/${product.id}`}
+                  className="group"
+                >
+                  <div className="aspect-square overflow-hidden rounded-2xl bg-[#f0eeea]">
+                    {product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                      />
+                    ) : (
+                      <div className="h-full bg-gradient-to-br from-[#ece7e1] to-[#d8cfc4]" />
+                    )}
+                  </div>
+                  <h3 className="mt-2.5 line-clamp-2 text-[13px] leading-snug">
+                    {product.name}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

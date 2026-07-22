@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { purchaseProductAction } from "@/lib/actions";
-import { formatPrice } from "@/lib/stage";
+import { formatPrice, getCurrentUserAccess, getStage } from "@/lib/stage";
 import { prisma } from "@/lib/prisma";
 
 export default async function ProductDetailPage({
@@ -10,6 +10,10 @@ export default async function ProductDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const stage = await getStage();
+  const { isOwner } = await getCurrentUserAccess();
+  if (!stage.shopEnabled && !isOwner) redirect("/");
+
   const product = await prisma.product.findUnique({ where: { id } });
   if (!product || !product.active) notFound();
 

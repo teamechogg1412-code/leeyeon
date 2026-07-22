@@ -83,6 +83,17 @@ export default async function AdminPage() {
         {stage.heroUrl && (
           <p className="text-[11px] text-muted">현재: {stage.heroUrl}</p>
         )}
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="shopEnabled"
+            defaultChecked={stage.shopEnabled}
+          />
+          Shop(MD) 공개
+        </label>
+        <p className="-mt-1 text-[11px] text-muted">
+          끄면 네비·홈에서 Shop이 숨겨집니다. 멤버십 페이지는 유지됩니다.
+        </p>
         <button
           type="submit"
           className="rounded-full bg-black px-4 py-2 text-sm text-white"

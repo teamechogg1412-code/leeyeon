@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, CalendarDays, Search, ShoppingBag, UserRound } from "lucide-react";
 
-const nav = [
+const navAll = [
   { href: "/", label: "Home" },
   { href: "/from", label: "From Yeon" },
   { href: "/contents", label: "Contents" },
@@ -18,17 +18,22 @@ export function SiteHeaderClient({
   stageName,
   isLoggedIn,
   isOwner,
+  shopEnabled = true,
   unreadCount = 0,
   logoutAction,
 }: {
   stageName: string;
   isLoggedIn: boolean;
   isOwner: boolean;
+  shopEnabled?: boolean;
   unreadCount?: number;
   logoutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const nav = shopEnabled
+    ? navAll
+    : navAll.filter((item) => item.href !== "/shop");
 
   return (
     <header
@@ -123,17 +128,19 @@ export function SiteHeaderClient({
                   </span>
                 )}
               </Link>
-              <Link
-                href="/shop"
-                className={
-                  isHome
-                    ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
-                    : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
-                }
-                aria-label="Shop"
-              >
-                <ShoppingBag size={18} />
-              </Link>
+              {shopEnabled && (
+                <Link
+                  href="/shop"
+                  className={
+                    isHome
+                      ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                      : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
+                  }
+                  aria-label="Shop"
+                >
+                  <ShoppingBag size={18} />
+                </Link>
+              )}
               <Link
                 href="/me"
                 className={
@@ -183,17 +190,19 @@ export function SiteHeaderClient({
               >
                 <CalendarDays size={18} />
               </Link>
-              <Link
-                href="/shop"
-                className={
-                  isHome
-                    ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
-                    : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
-                }
-                aria-label="Shop"
-              >
-                <ShoppingBag size={18} />
-              </Link>
+              {shopEnabled && (
+                <Link
+                  href="/shop"
+                  className={
+                    isHome
+                      ? "rounded-full p-2 text-white/75 hover:bg-white/10 hover:text-white"
+                      : "rounded-full p-2 text-black/60 hover:bg-black/5 hover:text-black"
+                  }
+                  aria-label="Shop"
+                >
+                  <ShoppingBag size={18} />
+                </Link>
+              )}
               <Link
                 href="/login"
                 className={
