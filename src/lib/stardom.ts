@@ -52,7 +52,8 @@ export async function getStardomPortfolio(
   const supabase = getSupabase();
   if (!supabase) return null;
 
-  const { data: actor, error } = await supabase
+  // Exact slug first, then case-insensitive match
+  const exact = await supabase
     .from("actors")
     .select(
       "id, name_ko, name_en, slug, profile_image_url, bio_headline, bio_text, height, brand_keyword, instagram_id, is_published"
@@ -60,17 +61,26 @@ export async function getStardomPortfolio(
     .eq("slug", slug)
     .maybeSingle();
 
-  if (error || !actor) {
-    console.error(
-      "[stardom] actor fetch failed",
-      error?.message || "not found",
-      "url=",
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "(missing)",
-      "slug=",
-      slug
-    );
-    return null;
+  let actor = (exact.data as StardomActor | null) ?? null;
+
+  if (!actor) {
+    const fuzzy = await supabase
+      .from("actors")
+      .select(
+        "id, name_ko, name_en, slug, profile_image_url, bio_headline, bio_text, height, brand_keyword, instagram_id, is_published"
+      )
+      .ilike("slug", slug)
+      .limit(1)
+      .maybeSingle();
+    actor = (fuzzy.data as StardomActor | null) ?? null;
+    if (fuzzy.error) {
+      console.error("[stardom] actor fetch failed", fuzzy.error.message);
+    } else if (exact.error) {
+      console.error("[stardom] actor fetch failed", exact.error.message);
+    }
   }
+
+  if (!actor) return null;
 
   const [imagesRes, editorialsRes] = await Promise.all([
     supabase
@@ -80,7 +90,9 @@ export async function getStardomPortfolio(
       .order("sort_order"),
     supabase
       .from("editorials")
-      .select("id, year_label, media_name, sort_order, editorial_media(id, media_url, media_type, sort_order)")
+      .select(
+        "id, year_label, media_name, sort_order, editorial_media(id, media_url, media_type, sort_order)"
+      )
       .eq("actor_id", actor.id)
       .order("sort_order"),
   ]);
