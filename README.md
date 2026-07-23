@@ -32,10 +32,13 @@ b.stage 스타일 올인원 팬 플랫폼
 스타덤(`stardom-forge-tool`)에 올린 프로필/화보가 팬사이트에도 보입니다.
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://qljnoknaplfjircybzgt.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # 스타덤과 동일 anon key
+NEXT_PUBLIC_SUPABASE_URL=https://hapgatumhlwkyiycfcny.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=   # stardom-forge `src/lib/supabase.ts` 의 supabaseAnonKey
 STARDOM_ACTOR_SLUG=Lee-Yeon
 ```
+
+> 주의: `qljnoknaplfjircybzgt` 프로젝트에는 `actors` 테이블이 없습니다.  
+> 화보/프로필은 **`hapgatumhlwkyiycfcny`** 를 써야 합니다.
 
 - 메뉴: **Lookbook**
 - 읽기 전용 (스타덤에서 수정 → 팬사이트 반영)

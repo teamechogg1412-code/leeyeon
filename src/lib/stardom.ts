@@ -61,7 +61,14 @@ export async function getStardomPortfolio(
     .maybeSingle();
 
   if (error || !actor) {
-    console.error("[stardom] actor fetch failed", error?.message || "not found");
+    console.error(
+      "[stardom] actor fetch failed",
+      error?.message || "not found",
+      "url=",
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "(missing)",
+      "slug=",
+      slug
+    );
     return null;
   }
 
