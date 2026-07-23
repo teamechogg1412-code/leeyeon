@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Lock, MessageCircle, Play } from "lucide-react";
 import { FilterChips, SearchBar } from "@/components/SearchFilters";
-import { SmartImage } from "@/components/SmartImage";
+import { EditorialGallery } from "@/components/EditorialGallery";
 import { buildQuery } from "@/lib/search";
 import { getStardomEditorials } from "@/lib/stardom";
 import { getCurrentUserAccess, getStage } from "@/lib/stage";
@@ -177,38 +177,11 @@ export default async function ContentsPage({
         <section className="space-y-4">
           <div>
             <h2 className="text-[17px] font-semibold">화보</h2>
-            <p className="mt-1 text-sm text-muted">Editorials · 아카이브</p>
+            <p className="mt-1 text-sm text-muted">
+              종류별로 묶어 모달에서 좌우로 넘겨 보세요
+            </p>
           </div>
-          <div className="space-y-8">
-            {filteredEditorials.map((ed) => (
-              <div key={ed.id}>
-                <div className="mb-3 flex flex-wrap items-baseline gap-2">
-                  {ed.year_label && (
-                    <span className="text-xs font-medium tracking-wide text-muted">
-                      {ed.year_label}
-                    </span>
-                  )}
-                  <h3 className="text-sm font-medium">
-                    {ed.media_name || "Editorial"}
-                  </h3>
-                </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                  {ed.editorial_media.map((m) => (
-                    <div
-                      key={m.id}
-                      className="overflow-hidden rounded-xl bg-[#1a1a1a]"
-                    >
-                      <SmartImage
-                        src={m.media_url}
-                        alt={ed.media_name || "editorial"}
-                        className="aspect-[3/4] w-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <EditorialGallery editorials={filteredEditorials} />
         </section>
       )}
 
