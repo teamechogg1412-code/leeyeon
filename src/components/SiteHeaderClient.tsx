@@ -7,7 +7,6 @@ import { Bell, CalendarDays, Search, ShoppingBag, UserRound } from "lucide-react
 const navAll = [
   { href: "/", label: "Home" },
   { href: "/from", label: "From Yeon" },
-  { href: "/lookbook", label: "Lookbook" },
   { href: "/contents", label: "Contents" },
   { href: "/community", label: "Community" },
   { href: "/pop", label: "POP" },

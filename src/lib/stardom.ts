@@ -44,6 +44,14 @@ export type StardomPortfolio = {
   editorials: StardomEditorial[];
 };
 
+/** Editorials only — no profile/bio (internal). */
+export async function getStardomEditorials(
+  slug = STARDOM_ACTOR_SLUG
+): Promise<StardomEditorial[]> {
+  const portfolio = await getStardomPortfolio(slug);
+  return portfolio?.editorials ?? [];
+}
+
 export async function getStardomPortfolio(
   slug = STARDOM_ACTOR_SLUG
 ): Promise<StardomPortfolio | null> {
@@ -52,7 +60,6 @@ export async function getStardomPortfolio(
   const supabase = getSupabase();
   if (!supabase) return null;
 
-  // Exact slug first, then case-insensitive match
   const exact = await supabase
     .from("actors")
     .select(
